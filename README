@@ -1,0 +1,6 @@
+Compile
+
+$ javac src/*.java
+
+Run
+
