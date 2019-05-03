@@ -4,6 +4,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Random;
 
 public class Utils {
+	private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
 
 	public static byte[] getChunkContent(byte[] message, int length) {
 
@@ -100,4 +101,13 @@ public class Utils {
 		return r.nextInt(high-low) + low;
 	}
 
+	public static char[] hexString(byte[] info) {
+        char[] hexChars = new char[info.length * 2];
+        for (int j = 0; j < info.length; j++) {
+            int v = info[j] & 0xFF;
+            hexChars[j * 2] = hexArray[v >>> 4];
+            hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+        }
+        return hexChars;
+    }
 }
