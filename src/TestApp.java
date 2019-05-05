@@ -1,4 +1,7 @@
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.ArrayList;
@@ -80,26 +83,27 @@ class TestApp {
 
     public static void main(String[] args) throws IOException {
         // if (!validateArguments(args))
-        //     return;
+        // return;
 
         // try {
-        //     Registry registry = LocateRegistry.getRegistry("localhost");
-        //     String response = "";
-        //     String operation = args[1];
+        // Registry registry = LocateRegistry.getRegistry("localhost");
+        // String response = "";
+        // String operation = args[1];
 
-        //     if (operation.equals("BACKUP")) {
-        //         response = stub.backup(args[2], Integer.parseInt(args[3]), operation.contains("ENH"));
-        //     } else if (operation.equals("RESTORE")) {
-        //         response = stub.restore(args[2], operation.contains("ENH"));
-        //     } else if (operation.equals("DELETE")) {
-        //         response = stub.delete(args[2], operation.contains("ENH"));
-        //     }
+        // if (operation.equals("BACKUP")) {
+        // response = stub.backup(args[2], Integer.parseInt(args[3]),
+        // operation.contains("ENH"));
+        // } else if (operation.equals("RESTORE")) {
+        // response = stub.restore(args[2], operation.contains("ENH"));
+        // } else if (operation.equals("DELETE")) {
+        // response = stub.delete(args[2], operation.contains("ENH"));
+        // }
 
-        //     System.out.println("response: " + response);
+        // System.out.println("response: " + response);
 
         // } catch (Exception e) {
-        //     System.err.println("Client exception: " + e.toString());
-        //     e.printStackTrace();
+        // System.err.println("Client exception: " + e.toString());
+        // e.printStackTrace();
         // }
     }
 }
