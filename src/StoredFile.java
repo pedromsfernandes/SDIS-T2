@@ -3,6 +3,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -28,7 +30,7 @@ class StoredFile implements Serializable {
 		this.chunks = new ConcurrentHashMap<Integer, ArrayList<Integer>>();
 		this.fileId = encryptFileId(fileName);
 	}
-	
+
 	public int getPerceivedReplicationDegree(int chunkNo) {
 		return chunks.get(chunkNo).size();
 	}
@@ -52,27 +54,26 @@ class StoredFile implements Serializable {
 
 	public ArrayList<Chunk> splitFile() throws IOException {
 
-		int chunkSize = 64 * 1000;// 64KByte
-		byte[] buffer = new byte[chunkSize];
+		int chunkSize = 64 * 1000; // 64KByte
 		ArrayList<Chunk> chunks = new ArrayList<Chunk>();
-		File f = new File(this.fileName);
+
+		FileInputStream fin = new FileInputStream(this.fileName);
+		FileChannel fc = fin.getChannel();
+		ByteBuffer byteBuffer = ByteBuffer.allocate(chunkSize);
 		int chunkNo = 0, bytesAmount = 0;
 
-		// try-with-resources to ensure closing stream
-		try (FileInputStream fis = new FileInputStream(f); BufferedInputStream bis = new BufferedInputStream(fis)) {
+		for (; (bytesAmount = fc.read(byteBuffer)) > 0; chunkNo++) {
+			byte[] smaller = new byte[bytesAmount];
 
-			for (; (bytesAmount = bis.read(buffer)) > 0; chunkNo++) {
-				byte[] smaller = new byte[bytesAmount];
-				System.arraycopy(buffer, 0, smaller, 0, bytesAmount);
-				chunks.add(new Chunk(fileId, chunkNo, smaller, bytesAmount, replicationDegree));
-				this.chunks.put(chunkNo, new ArrayList<Integer>());
-			}
-		}
-
-		if (f.length() % chunkSize == 0) {
-			chunks.add(new Chunk(fileId, chunkNo, buffer, 0, replicationDegree));
+			byteBuffer.flip();
+			byteBuffer.get(smaller);
+			byteBuffer.clear();
+			
+			chunks.add(new Chunk(fileId, chunkNo, smaller, bytesAmount, replicationDegree));
 			this.chunks.put(chunkNo, new ArrayList<Integer>());
 		}
+
+		fin.close();
 
 		return chunks;
 	}

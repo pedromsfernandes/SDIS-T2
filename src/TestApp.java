@@ -1,5 +1,7 @@
+import java.io.IOException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.util.ArrayList;
 
 class TestApp {
 
@@ -76,35 +78,28 @@ class TestApp {
         return true;
     }
 
-    public static void main(String[] args) {
-        if (!validateArguments(args))
-            return;
+    public static void main(String[] args) throws IOException {
+        // if (!validateArguments(args))
+        //     return;
 
-        String remote_object_name = args[0];
+        // try {
+        //     Registry registry = LocateRegistry.getRegistry("localhost");
+        //     String response = "";
+        //     String operation = args[1];
 
-        try {
-            Registry registry = LocateRegistry.getRegistry("localhost");
-            RemoteInterface stub = (RemoteInterface) registry.lookup(remote_object_name);
-            String response = "";
-            String operation = args[1];
+        //     if (operation.equals("BACKUP")) {
+        //         response = stub.backup(args[2], Integer.parseInt(args[3]), operation.contains("ENH"));
+        //     } else if (operation.equals("RESTORE")) {
+        //         response = stub.restore(args[2], operation.contains("ENH"));
+        //     } else if (operation.equals("DELETE")) {
+        //         response = stub.delete(args[2], operation.contains("ENH"));
+        //     }
 
-            if (operation.contains("BACKUP")) {
-                response = stub.backup(args[2], Integer.parseInt(args[3]), operation.contains("ENH"));
-            } else if (operation.contains("RESTORE")) {
-                response = stub.restore(args[2], operation.contains("ENH"));
-            } else if (operation.contains("DELETE")) {
-                response = stub.delete(args[2], operation.contains("ENH"));
-            } else if (operation.contains("RECLAIM")) {
-                response = stub.reclaim(Integer.parseInt(args[2]));
-            } else {
-                response = stub.state();
-            }
+        //     System.out.println("response: " + response);
 
-            System.out.println("response: " + response);
-
-        } catch (Exception e) {
-            System.err.println("Client exception: " + e.toString());
-            e.printStackTrace();
-        }
+        // } catch (Exception e) {
+        //     System.err.println("Client exception: " + e.toString());
+        //     e.printStackTrace();
+        // }
     }
 }

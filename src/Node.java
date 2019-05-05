@@ -6,11 +6,12 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 public class Node extends ExternalNode {
 	ThreadPoolExecutor executor;
-	ExternalNode predecessor;
+	ExternalNode predecessor; 
 	ExternalNode successor;
 
 	Node(int port) throws UnknownHostException {
 		super(Inet4Address.getLocalHost().getHostAddress(), port);
+
 		this.predecessor = null;
 		this.successor = this;
 
