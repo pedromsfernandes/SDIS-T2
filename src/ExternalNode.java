@@ -2,9 +2,11 @@ import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.Socket;
 import java.net.UnknownHostException;
 import java.security.MessageDigest;
+
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 
 public class ExternalNode {
 	String id;
@@ -29,7 +31,9 @@ public class ExternalNode {
 	}
 
 	public ExternalNode findSuccessor(String id) throws UnknownHostException, IOException {
-		Socket socket = new Socket(ip, port);
+		SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+		SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
+
 		DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 		BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		

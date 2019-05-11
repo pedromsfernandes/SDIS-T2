@@ -2,8 +2,10 @@ import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.ServerSocket;
-import java.net.Socket;
+
+import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLServerSocketFactory;
+import javax.net.ssl.SSLSocket;
 
 public class NodeThread implements Runnable {
 	private Node node;
@@ -12,7 +14,7 @@ public class NodeThread implements Runnable {
 		this.node = node;
 	}
 
-	public void interpretMessage(Socket connection) throws IOException {
+	public void interpretMessage(SSLSocket connection) throws IOException {
 		BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 
 		String message = in.readLine().trim();
@@ -36,10 +38,11 @@ public class NodeThread implements Runnable {
 
 	public void run() {
 		try {
-			ServerSocket listenSocket = new ServerSocket(node.port);
-
+			SSLServerSocketFactory ssf = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
+			SSLServerSocket listenSocket = (SSLServerSocket) ssf.createServerSocket(node.port);
+			
 			while(true) {
-				Socket connection = listenSocket.accept();
+				SSLSocket connection = (SSLSocket) listenSocket.accept();
 				node.executor.execute(new Runnable(){
 					public void run() {
 						try {
