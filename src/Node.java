@@ -1,43 +1,105 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.Inet4Address;
 import java.net.UnknownHostException;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 
 public class Node extends ExternalNode {
-	ThreadPoolExecutor executor;
+	ScheduledExecutorService executor;
 	ExternalNode predecessor;
 	ExternalNode successor;
+	ExternalNode[] fingerTable;
 
 	Node(int port) throws UnknownHostException {
 		super(Inet4Address.getLocalHost().getHostAddress(), port);
 
-		this.predecessor = null;
+		this.predecessor = this;
 		this.successor = this;
 
-		executor = (ThreadPoolExecutor) Executors.newScheduledThreadPool(10);
+		fingerTable = new ExternalNode[this.id.bitLength()];
+		for(int i = 0; i < fingerTable.length; i++)
+			fingerTable[i] = this;
+
+		executor = Executors.newScheduledThreadPool(10);
 		executor.execute(new NodeThread(this));
+		executor.scheduleAtFixedRate(new StabilizeThread(this), 0, 5, TimeUnit.SECONDS);
 	}
 
 	public void join(ExternalNode ringNode) throws UnknownHostException, IOException {
 		this.predecessor = null;
 		this.successor = ringNode.findSuccessor(this.id);
+		fingerTable[0] = this.successor;
 	}
 
-	public ExternalNode findSuccessor(String id) throws UnknownHostException, IOException {
-		if (id.compareTo(this.id) < 0 || id.compareTo(this.successor.id) >= 0)
-			return this;
+	public static boolean idBetween(BigInteger id, BigInteger lhs, BigInteger rhs) {
+		if(lhs.compareTo(rhs) > 0)
+			return (id.compareTo(lhs) >= 0) || (id.compareTo(rhs) <= 0);
+		
+		return (id.compareTo(lhs) >= 0) && (id.compareTo(rhs) <= 0);
+	}
 
-		if (this != successor)
-			return successor.findSuccessor(id);
+	public ExternalNode findSuccessor(BigInteger id) {
+		if(idBetween(id, this.id, this.successor.id))
+			return this.successor;
 
-		return null;
+		else {
+			ExternalNode n0 = closestPrecedingNode(id);
+			return n0.findSuccessor(id);
+		}
+	}
+
+	public ExternalNode closestPrecedingNode(BigInteger id) {
+		for(int i = fingerTable.length - 1; i >= 0; i++)
+			if(idBetween(fingerTable[i].id, this.id, id))
+				return fingerTable[i];
+
+		return this;
+	}
+
+	public ExternalNode getPredecessor() {
+		return this.predecessor;
+	}
+
+	public void notify(ExternalNode other) {
+		if(this.predecessor == null || idBetween(other.id, this.predecessor.id, this.id))
+			this.predecessor = other;
+	}
+
+	public void stabilize() {
+		ExternalNode x = this.successor.getPredecessor();
+
+		if(x != null && idBetween(x.id, this.id, successor.id)) {
+			this.successor = x;
+			fingerTable[0] = x;
+		}
+
+		this.successor.notify(this);
+	}
+
+	public void fixFingers() {
+		for(int i = 0; i < fingerTable.length; i++) {
+			fingerTable[i] = findSuccessor(this.id.add(new BigInteger(Integer.toString((int) Math.pow(2,i)))).mod(new BigInteger(Integer.toString((int) Math.pow(2,this.id.bitLength())))));
+
+			if(i == 0)
+				this.successor = fingerTable[0];
+		}
+	}
+
+	public boolean failed() {
+		return false;
+	}
+
+	public void checkPredecessor() {
+		if(this.predecessor != null && this.predecessor.failed())
+			this.predecessor = null;
 	}
 
 	private String backup(DataOutputStream out, DataInputStream in) throws IOException {
