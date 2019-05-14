@@ -40,7 +40,7 @@ public class Node extends ExternalNode {
 	public void join(ExternalNode ringNode) throws UnknownHostException, IOException {
 		this.predecessor = null;
 		this.successor = ringNode.findSuccessor(this.id);
-		this.successor.getKeys();
+		//this.successor.getKeys();
 		fingerTable[0] = this.successor;
 	}
 
@@ -52,11 +52,18 @@ public class Node extends ExternalNode {
 	}
 
 	public ExternalNode findSuccessor(BigInteger id) {
+		if(id.equals(this.id))
+			return this;
+
 		if(idBetween(id, this.id, this.successor.id))
 			return this.successor;
 
 		else {
 			ExternalNode n0 = closestPrecedingNode(id);
+
+			if(n0.id.equals(this.id))
+				return this;
+
 			return n0.findSuccessor(id);
 		}
 	}
@@ -83,7 +90,7 @@ public class Node extends ExternalNode {
 
 		if(x != null && idBetween(x.id, this.id, successor.id)) {
 			this.successor = x;
-			this.successor.getKeys();
+			//this.successor.getKeys();
 			fingerTable[0] = x;
 		}
 
@@ -96,7 +103,7 @@ public class Node extends ExternalNode {
 
 			if(i == 0) {
 				this.successor = fingerTable[0];
-				this.successor.getKeys();
+				//this.successor.getKeys();
 			}
 		}
 	}

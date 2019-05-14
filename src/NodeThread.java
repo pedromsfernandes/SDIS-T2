@@ -3,6 +3,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.math.BigInteger;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.net.UnknownHostException;
 
 import javax.net.ssl.SSLServerSocket;
@@ -16,8 +18,10 @@ public class NodeThread implements Runnable {
 		this.node = node;
 	}
 
-	public void findSuccessor(SSLSocket connection, String[] args) {
-		ExternalNode successor = node.findSuccessor(new BigInteger(args[2]));
+	public void findSuccessor(Socket connection, String[] args) {
+		ExternalNode successor = node.findSuccessor(new BigInteger(args[2],16));
+
+		System.out.println("adeus");
 
 		String response = "SUCCESSOR " + node.id + " ";
 
@@ -37,7 +41,7 @@ public class NodeThread implements Runnable {
 		}
 	}
 
-	public void getPredecessor(SSLSocket connection, String[] args) {
+	public void getPredecessor(Socket connection, String[] args) {
 		ExternalNode predecessor = node.getPredecessor();
 
 		String response = "PREDECESSOR " + node.id + " ";
@@ -58,11 +62,11 @@ public class NodeThread implements Runnable {
 		}
 	}
 
-	public void notify(SSLSocket connection, String[] args) {
+	public void notify(Socket connection, String[] args) {
 		node.notify(new ExternalNode(args[2], Integer.parseInt(args[3])));
 	}
 
-	public void hi(SSLSocket connection, String[] args) {
+	public void hi(Socket connection, String[] args) {
 		String response = "HI " + node.id + " \n";
 
 		System.out.print("[Node " + node.id + "] "+ response);
@@ -76,15 +80,15 @@ public class NodeThread implements Runnable {
 		}
 	}
 
-	public void getKeys(SSLSocket connection, String[] args) {
+	public void getKeys(Socket connection, String[] args) {
 		//TODO
 	}
 
-	public void interpretMessage(SSLSocket connection) throws IOException {
+	public void interpretMessage(Socket connection) throws IOException {
 		BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 
 		String message = in.readLine().trim();
-		System.out.print("[Node " + node.id + "] "+ message);
+		System.out.print("[Node " + node.id + "] " + message);
 		String[] args = message.split(" ");
 
 		switch(args[0]) {
@@ -98,11 +102,13 @@ public class NodeThread implements Runnable {
 
 	public void run() {
 		try {
-			SSLServerSocketFactory ssf = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
-			SSLServerSocket listenSocket = (SSLServerSocket) ssf.createServerSocket(node.port);
+			// SSLServerSocketFactory ssf = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
+			// SSLServerSocket listenSocket = (SSLServerSocket) ssf.createServerSocket(node.port);
+			ServerSocket listenSocket = new ServerSocket(node.port);
 			
 			while(true) {
-				SSLSocket connection = (SSLSocket) listenSocket.accept();
+				// SSLSocket connection = (SSLSocket) listenSocket.accept();
+				Socket connection = listenSocket.accept();
 				node.executor.execute(new Runnable(){
 					public void run() {
 						try {

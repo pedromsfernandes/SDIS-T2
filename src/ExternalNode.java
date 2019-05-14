@@ -3,6 +3,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.math.BigInteger;
+import java.net.Socket;
 import java.net.UnknownHostException;
 import java.security.MessageDigest;
 
@@ -19,8 +20,9 @@ public class ExternalNode {
 		try {
 			MessageDigest digest = MessageDigest.getInstance("SHA-1");
 			byte[] encoded = digest.digest(info.getBytes());
-			return new BigInteger(new String(Utils.hexString(encoded)));
+			return new BigInteger(encoded);
 		} catch (Exception e) {
+			e.printStackTrace();
 			return new BigInteger("0");
 		}
 	}
@@ -33,8 +35,10 @@ public class ExternalNode {
 
 	public ExternalNode findSuccessor(BigInteger id) {
 		try {
-			SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-			SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
+			// SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+			// SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
+
+			Socket socket = new Socket(ip, port);
 
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -69,9 +73,10 @@ public class ExternalNode {
 
 	public ExternalNode getPredecessor() {
 		try {
-			SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+			// SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
 			String response;
-			SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
+			// SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
+			Socket socket = new Socket(ip, port);
 
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -84,13 +89,13 @@ public class ExternalNode {
 			response = in.readLine().trim();
 
 			socket.close();
-			System.out.print("[Node " + this.id + "] "+ response);
+			System.out.print("[Node " + this.id + "] " + response);
 
 			String[] args = response.split(" ");
-	
-			if(args[2].equals("NOTFOUND"))
+
+			if (args[2].equals("NOTFOUND"))
 				return null;
-			
+
 			return new ExternalNode(args[2], Integer.parseInt(args[3]));
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
@@ -105,14 +110,15 @@ public class ExternalNode {
 
 	public void notify(ExternalNode other) {
 		try {
-			SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-			SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
-	
+			// SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+			// SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
+			Socket socket = new Socket(ip, port);
+
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-			
+
 			String message = "NOTIFY " + this.id + " " + other.ip + " " + other.port + " \n";
-			System.out.print("[Node " + this.id + "] "+ message);
-	
+			System.out.print("[Node " + this.id + "] " + message);
+
 			out.writeBytes(message);
 			socket.close();
 		} catch (UnknownHostException e) {
@@ -126,8 +132,9 @@ public class ExternalNode {
 
 	public boolean failed() {
 		try {
-			SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-			SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
+			// SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+			// SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
+			Socket socket = new Socket(ip, port);
 
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -140,7 +147,7 @@ public class ExternalNode {
 			in.readLine();
 
 			socket.close();
-	
+
 			return false;
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
@@ -155,8 +162,10 @@ public class ExternalNode {
 
 	public void getKeys() {
 		try {
-			SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-			SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
+			// SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+			// SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
+
+			Socket socket = new Socket(ip, port);
 
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
