@@ -20,8 +20,8 @@ public class Node extends ExternalNode {
 	ExternalNode[] fingerTable;
 	Hashtable<BigInteger,String> keys;
 
-	Node(int port) throws UnknownHostException {
-		super("10.227.155.126", port);
+	Node(String ip,int port) throws UnknownHostException {
+		super(ip, port);
 
 		keys = new Hashtable<>();
 
@@ -151,7 +151,7 @@ public class Node extends ExternalNode {
 
 	public static void main(String[] args) throws IOException {
 
-		Node node = new Node(Integer.parseInt(args[0]));
+		Node node = new Node("10.227.155.126",Integer.parseInt(args[0]));
 
 		SSLServerSocketFactory ssf = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
 		SSLServerSocket ss = (SSLServerSocket) ssf.createServerSocket(8081);

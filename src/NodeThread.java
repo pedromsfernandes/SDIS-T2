@@ -20,12 +20,6 @@ public class NodeThread implements Runnable {
 	public void findSuccessor(Socket connection, String[] args) {
 		ExternalNode successor = node.findSuccessor(new BigInteger(1, new BigInteger(args[2],16).toString(16).getBytes()));
 
-		if(node.id.equals(node.successor.id) && node.id.equals(node.predecessor.id)){
-			node.successor = new ExternalNode(connection.getInetAddress().getHostAddress(), connection.getPort());
-			node.predecessor = node.successor;
-			node.fingerTable[0] = node.successor;
-		}
-
 		String response = "SUCCESSOR " + node.id + " ";
 
 		if(successor == null)
@@ -33,7 +27,7 @@ public class NodeThread implements Runnable {
 
 		else response += successor.ip + " " + successor.port + " \n";
 
-		System.out.print("[Node " + node.id + "] "+ response);
+		System.out.println("[Node " + node.id + "] "+ response);
 
 		try {
 			DataOutputStream out = new DataOutputStream(connection.getOutputStream());
@@ -54,7 +48,7 @@ public class NodeThread implements Runnable {
 
 		else response += predecessor.ip + " " + predecessor.port + " \n";
 
-		System.out.print("[Node " + node.id + "] "+ response);
+		System.out.println("[Node " + node.id + "] "+ response);
 
 		try {
 			DataOutputStream out = new DataOutputStream(connection.getOutputStream());
@@ -72,7 +66,7 @@ public class NodeThread implements Runnable {
 	public void hi(Socket connection, String[] args) {
 		String response = "HI " + node.id + " \n";
 
-		System.out.print("[Node " + node.id + "] "+ response);
+		System.out.println("[Node " + node.id + "] "+ response);
 
 		try {
 			DataOutputStream out = new DataOutputStream(connection.getOutputStream());
@@ -91,7 +85,7 @@ public class NodeThread implements Runnable {
 		BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 
 		String message = in.readLine().trim();
-		System.out.print("[Node " + node.id + "] " + message);
+		System.out.println("[Node " + node.id + "] " + message);
 		String[] args = message.split(" ");
 
 		switch(args[0]) {
