@@ -20,10 +20,10 @@ public class ExternalNode {
 		try {
 			MessageDigest digest = MessageDigest.getInstance("SHA-1");
 			byte[] encoded = digest.digest(info.getBytes());
-			return new BigInteger(encoded);
+			return new BigInteger(1,encoded);
 		} catch (Exception e) {
 			e.printStackTrace();
-			return new BigInteger("0");
+			return new BigInteger(1,"0".getBytes());
 		}
 	}
 

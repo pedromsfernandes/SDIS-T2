@@ -4,8 +4,8 @@ $ javac src/*.java
 
 Run
 
-Server: java -Djavax.net.ssl.keyStore=keystore -Djavax.net.ssl.keyStorePassword=sdis1822 Server
+Server: java "-Djavax.net.ssl.keyStore=keystore" "-Djavax.net.ssl.keyStorePassword=sdis1822" Server
 
-TestApp: java -Djavax.net.ssl.trustStore=keystore -Djavax.net.ssl.trustStorePassword=sdis1822 TestApp <PROTOCOL> <opnd_1> <opnd_2>
+TestApp: java "-Djavax.net.ssl.trustStore=trustStore" "-Djavax.net.ssl.trustStorePassword=sdis1822" TestApp <PROTOCOL> <opnd_1> <opnd_2>
 
-java ChordTest -Djavax.net.ssl.keyStore=keystore -Djavax.net.ssl.keyStorePassword=sdis1822 -Djavax.net.ssl.trustStore=keystore -Djavax.net.ssl.trustStorePassword=sdis1822
+java "-Djavax.net.ssl.keyStore=keystore" "-Djavax.net.ssl.keyStorePassword=sdis1822" "-Djavax.net.ssl.trustStore=trustStore" "-Djavax.net.ssl.trustStorePassword=sdis1822" ChordTest

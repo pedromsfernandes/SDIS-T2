@@ -18,7 +18,13 @@ public class NodeThread implements Runnable {
 	}
 
 	public void findSuccessor(Socket connection, String[] args) {
-		ExternalNode successor = node.findSuccessor(new BigInteger(args[2],16));
+		ExternalNode successor = node.findSuccessor(new BigInteger(1, new BigInteger(args[2],16).toString(16).getBytes()));
+
+		if(node.id.equals(node.successor.id) && node.id.equals(node.predecessor.id)){
+			node.successor = new ExternalNode(connection.getInetAddress().getHostAddress(), connection.getPort());
+			node.predecessor = node.successor;
+			node.fingerTable[0] = node.successor;
+		}
 
 		String response = "SUCCESSOR " + node.id + " ";
 

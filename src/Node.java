@@ -21,7 +21,7 @@ public class Node extends ExternalNode {
 	Hashtable<BigInteger,String> keys;
 
 	Node(int port) throws UnknownHostException {
-		super(InetAddress.getLocalHost().getHostAddress(), port);
+		super("10.227.155.126", port);
 
 		keys = new Hashtable<>();
 
@@ -99,7 +99,7 @@ public class Node extends ExternalNode {
 
 	public void fixFingers() {
 		for(int i = 0; i < fingerTable.length; i++) {
-			fingerTable[i] = findSuccessor(this.id.add(new BigInteger(Integer.toString((int) Math.pow(2,i)))).mod(new BigInteger(Integer.toString((int) Math.pow(2,this.id.bitLength())))));
+			fingerTable[i] = findSuccessor(this.id.add(new BigInteger(1,(Integer.toString((int) Math.pow(2,i))).getBytes())).mod(new BigInteger(1,(Integer.toString((int) Math.pow(2,this.id.bitLength()))).getBytes())));
 
 			if(i == 0) {
 				this.successor = fingerTable[0];
