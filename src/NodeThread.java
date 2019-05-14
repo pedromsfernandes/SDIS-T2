@@ -76,6 +76,10 @@ public class NodeThread implements Runnable {
 		}
 	}
 
+	public void getKeys(SSLSocket connection, String[] args) {
+		//TODO
+	}
+
 	public void interpretMessage(SSLSocket connection) throws IOException {
 		BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 
@@ -88,6 +92,7 @@ public class NodeThread implements Runnable {
 			case "GETPREDECESSOR": getPredecessor(connection, args);
 			case "NOTIFY": notify(connection, args);
 			case "HI": hi(connection, args);
+			case "GETKEYS": getKeys(connection, args);
 		}
 	}
 

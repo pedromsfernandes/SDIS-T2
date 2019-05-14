@@ -7,6 +7,7 @@ import java.net.UnknownHostException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.Hashtable;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
@@ -17,9 +18,12 @@ public class Node extends ExternalNode {
 	ExternalNode predecessor;
 	ExternalNode successor;
 	ExternalNode[] fingerTable;
+	Hashtable<BigInteger,String> keys;
 
 	Node(int port) throws UnknownHostException {
 		super(Inet4Address.getLocalHost().getHostAddress(), port);
+
+		keys = new Hashtable<>();
 
 		this.predecessor = this;
 		this.successor = this;
@@ -28,7 +32,7 @@ public class Node extends ExternalNode {
 		for(int i = 0; i < fingerTable.length; i++)
 			fingerTable[i] = this;
 
-		executor = Executors.newScheduledThreadPool(10);
+		executor = Executors.newScheduledThreadPool(25);
 		executor.execute(new NodeThread(this));
 		executor.scheduleAtFixedRate(new StabilizeThread(this), 0, 5, TimeUnit.SECONDS);
 	}
@@ -36,6 +40,7 @@ public class Node extends ExternalNode {
 	public void join(ExternalNode ringNode) throws UnknownHostException, IOException {
 		this.predecessor = null;
 		this.successor = ringNode.findSuccessor(this.id);
+		this.successor.getKeys();
 		fingerTable[0] = this.successor;
 	}
 
@@ -58,7 +63,7 @@ public class Node extends ExternalNode {
 
 	public ExternalNode closestPrecedingNode(BigInteger id) {
 		for(int i = fingerTable.length - 1; i >= 0; i++)
-			if(idBetween(fingerTable[i].id, this.id, id))
+			if(fingerTable[i] != null && idBetween(fingerTable[i].id, this.id, id))
 				return fingerTable[i];
 
 		return this;
@@ -78,6 +83,7 @@ public class Node extends ExternalNode {
 
 		if(x != null && idBetween(x.id, this.id, successor.id)) {
 			this.successor = x;
+			this.successor.getKeys();
 			fingerTable[0] = x;
 		}
 
@@ -88,8 +94,10 @@ public class Node extends ExternalNode {
 		for(int i = 0; i < fingerTable.length; i++) {
 			fingerTable[i] = findSuccessor(this.id.add(new BigInteger(Integer.toString((int) Math.pow(2,i)))).mod(new BigInteger(Integer.toString((int) Math.pow(2,this.id.bitLength())))));
 
-			if(i == 0)
+			if(i == 0) {
 				this.successor = fingerTable[0];
+				this.successor.getKeys();
+			}
 		}
 	}
 

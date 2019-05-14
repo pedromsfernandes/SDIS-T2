@@ -109,7 +109,6 @@ public class ExternalNode {
 			SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
 	
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			
 			String message = "NOTIFY " + this.id + " " + other.ip + " " + other.port + " \n";
 			System.out.print("[Node " + this.id + "] "+ message);
@@ -152,5 +151,27 @@ public class ExternalNode {
 		}
 
 		return true;
+	}
+
+	public void getKeys() {
+		try {
+			SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+			SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
+
+			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+
+			String message = "GETKEYS " + this.id + " \n";
+			System.out.print("[Node " + this.id + "] " + message);
+
+			out.writeBytes(message);
+
+			socket.close();
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }
