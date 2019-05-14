@@ -2,7 +2,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -21,7 +21,7 @@ public class Node extends ExternalNode {
 	Hashtable<BigInteger,String> keys;
 
 	Node(int port) throws UnknownHostException {
-		super(Inet4Address.getLocalHost().getHostAddress(), port);
+		super(InetAddress.getLocalHost().getHostAddress(), port);
 
 		keys = new Hashtable<>();
 

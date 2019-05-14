@@ -35,10 +35,8 @@ public class ExternalNode {
 
 	public ExternalNode findSuccessor(BigInteger id) {
 		try {
-			// SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-			// SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
-
-			Socket socket = new Socket(ip, port);
+			SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+			SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
 
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -56,7 +54,7 @@ public class ExternalNode {
 
 			String[] args = response.split(" ");
 
-			if (args[2].equals("NOTFOUND"))
+			if (args.length < 3 || args[2].equals("NOTFOUND"))
 				return null;
 
 			return new ExternalNode(args[2], Integer.parseInt(args[3]));
@@ -73,10 +71,9 @@ public class ExternalNode {
 
 	public ExternalNode getPredecessor() {
 		try {
-			// SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+			SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
 			String response;
-			// SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
-			Socket socket = new Socket(ip, port);
+			SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
 
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -110,9 +107,8 @@ public class ExternalNode {
 
 	public void notify(ExternalNode other) {
 		try {
-			// SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-			// SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
-			Socket socket = new Socket(ip, port);
+			SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+			SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
 
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
@@ -132,9 +128,8 @@ public class ExternalNode {
 
 	public boolean failed() {
 		try {
-			// SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-			// SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
-			Socket socket = new Socket(ip, port);
+			SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+			SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
 
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -162,10 +157,8 @@ public class ExternalNode {
 
 	public void getKeys() {
 		try {
-			// SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-			// SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
-
-			Socket socket = new Socket(ip, port);
+			SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+			SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
 
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 

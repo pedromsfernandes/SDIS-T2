@@ -5,7 +5,6 @@ import java.io.InputStreamReader;
 import java.math.BigInteger;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.UnknownHostException;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
@@ -20,8 +19,6 @@ public class NodeThread implements Runnable {
 
 	public void findSuccessor(Socket connection, String[] args) {
 		ExternalNode successor = node.findSuccessor(new BigInteger(args[2],16));
-
-		System.out.println("adeus");
 
 		String response = "SUCCESSOR " + node.id + " ";
 
@@ -102,13 +99,11 @@ public class NodeThread implements Runnable {
 
 	public void run() {
 		try {
-			// SSLServerSocketFactory ssf = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
-			// SSLServerSocket listenSocket = (SSLServerSocket) ssf.createServerSocket(node.port);
-			ServerSocket listenSocket = new ServerSocket(node.port);
+			SSLServerSocketFactory ssf = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
+			SSLServerSocket listenSocket = (SSLServerSocket) ssf.createServerSocket(node.port);
 			
 			while(true) {
-				// SSLSocket connection = (SSLSocket) listenSocket.accept();
-				Socket connection = listenSocket.accept();
+				SSLSocket connection = (SSLSocket) listenSocket.accept();
 				node.executor.execute(new Runnable(){
 					public void run() {
 						try {
