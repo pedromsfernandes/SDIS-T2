@@ -42,7 +42,6 @@ public class ExternalNode {
 			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
 			String message = "FINDSUCCESSOR " + this.id + " " + id + " \n";
-			System.out.println("[Node " + this.id + "] " + message);
 
 			out.writeBytes(message);
 
@@ -79,7 +78,6 @@ public class ExternalNode {
 			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
 			String message = "GETPREDECESSOR " + this.id + " \n";
-			System.out.println("[Node " + this.id + "] " + message);
 
 			out.writeBytes(message);
 
@@ -111,11 +109,13 @@ public class ExternalNode {
 			SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
 
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
 			String message = "NOTIFY " + this.id + " " + other.ip + " " + other.port + " \n";
-			System.out.println("[Node " + this.id + "] " + message);
+
 
 			out.writeBytes(message);
+			in.readLine();
 			socket.close();
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
@@ -135,12 +135,9 @@ public class ExternalNode {
 			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
 			String message = "HI " + this.id + " \n";
-			System.out.println("[Node " + this.id + "] " + message);
 
 			out.writeBytes(message);
-
-			in.readLine();
-
+			System.out.println("[Node " + this.id + "] " + in.readLine());
 			socket.close();
 
 			return false;
@@ -163,7 +160,6 @@ public class ExternalNode {
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
 			String message = "GETKEYS " + this.id + " \n";
-			System.out.println("[Node " + this.id + "] " + message);
 
 			out.writeBytes(message);
 

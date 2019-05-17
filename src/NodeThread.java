@@ -17,7 +17,7 @@ public class NodeThread implements Runnable {
 		this.node = node;
 	}
 
-	public void findSuccessor(Socket connection, String[] args) {
+	public void findSuccessor(SSLSocket connection, String[] args) {
 		ExternalNode successor = node.findSuccessor(new BigInteger(1, new BigInteger(args[2],16).toString(16).getBytes()));
 
 		String response = "SUCCESSOR " + node.id + " ";
@@ -27,8 +27,6 @@ public class NodeThread implements Runnable {
 
 		else response += successor.ip + " " + successor.port + " \n";
 
-		System.out.println("[Node " + node.id + "] "+ response);
-
 		try {
 			DataOutputStream out = new DataOutputStream(connection.getOutputStream());
 			out.writeBytes(response);
@@ -38,7 +36,7 @@ public class NodeThread implements Runnable {
 		}
 	}
 
-	public void getPredecessor(Socket connection, String[] args) {
+	public void getPredecessor(SSLSocket connection, String[] args) {
 		ExternalNode predecessor = node.getPredecessor();
 
 		String response = "PREDECESSOR " + node.id + " ";
@@ -48,8 +46,6 @@ public class NodeThread implements Runnable {
 
 		else response += predecessor.ip + " " + predecessor.port + " \n";
 
-		System.out.println("[Node " + node.id + "] "+ response);
-
 		try {
 			DataOutputStream out = new DataOutputStream(connection.getOutputStream());
 			out.writeBytes(response);
@@ -59,17 +55,25 @@ public class NodeThread implements Runnable {
 		}
 	}
 
-	public void notify(Socket connection, String[] args) {
+	public void notify(SSLSocket connection, String[] args) {
 		node.notify(new ExternalNode(args[2], Integer.parseInt(args[3])));
+
+		try {
+			DataOutputStream out = new DataOutputStream(connection.getOutputStream());
+
+			out.writeBytes("OK");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
-	public void hi(Socket connection, String[] args) {
+	public void hi(SSLSocket connection, String[] args) {
 		String response = "HI " + node.id + " \n";
 
-		System.out.println("[Node " + node.id + "] "+ response);
-
 		try {
 			DataOutputStream out = new DataOutputStream(connection.getOutputStream());
+
 			out.writeBytes(response);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -77,11 +81,11 @@ public class NodeThread implements Runnable {
 		}
 	}
 
-	public void getKeys(Socket connection, String[] args) {
+	public void getKeys(SSLSocket connection, String[] args) {
 		//TODO
 	}
 
-	public void interpretMessage(Socket connection) throws IOException {
+	public void interpretMessage(SSLSocket connection) throws IOException {
 		BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 
 		String message = in.readLine().trim();

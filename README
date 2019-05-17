@@ -8,4 +8,4 @@ Server: java "-Djavax.net.ssl.keyStore=keystore" "-Djavax.net.ssl.keyStorePasswo
 
 TestApp: java "-Djavax.net.ssl.trustStore=trustStore" "-Djavax.net.ssl.trustStorePassword=sdis1822" TestApp <PROTOCOL> <opnd_1> <opnd_2>
 
-java "-Djavax.net.ssl.keyStore=keystore" "-Djavax.net.ssl.keyStorePassword=sdis1822" "-Djavax.net.ssl.trustStore=trustStore" "-Djavax.net.ssl.trustStorePassword=sdis1822" ChordTest
+java "-Djavax.net.ssl.keyStore=keystore" "-Djavax.net.ssl.keyStorePassword=sdis1822" "-Djavax.net.ssl.trustStore=truststore" "-Djavax.net.ssl.trustStorePassword=sdis1822" ChordTest
