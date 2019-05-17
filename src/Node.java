@@ -9,10 +9,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.Hashtable;
 
-import javax.net.ssl.SSLServerSocket;
-import javax.net.ssl.SSLServerSocketFactory;
-import javax.net.ssl.SSLSocket;
-
 public class Node extends ExternalNode {
 	ScheduledExecutorService executor;
 	ExternalNode predecessor;
@@ -117,7 +113,7 @@ public class Node extends ExternalNode {
 			this.predecessor = null;
 	}
 
-	private String backup(DataOutputStream out, DataInputStream in) throws IOException {
+	public String backup(DataOutputStream out, DataInputStream in) throws IOException {
 		String response = "";
 
 		int chunks = in.readInt();
@@ -135,14 +131,14 @@ public class Node extends ExternalNode {
 		return response;
 	}
 
-	private String restore(DataOutputStream out, DataInputStream in) {
+	public String restore(DataOutputStream out, DataInputStream in) {
 		String response = "";
 
 
 		return response;
 	}
 
-	private String delete(DataOutputStream out, DataInputStream in) {
+	public String delete(DataOutputStream out, DataInputStream in) {
 		String response = "";
 
 
@@ -152,37 +148,6 @@ public class Node extends ExternalNode {
 	public static void main(String[] args) throws IOException {
 
 		Node node = new Node("10.227.155.126",Integer.parseInt(args[0]));
-
-		SSLServerSocketFactory ssf = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
-		SSLServerSocket ss = (SSLServerSocket) ssf.createServerSocket(8081);
-
-		SSLSocket s = (SSLSocket) ss.accept();
-
-		DataOutputStream out = new DataOutputStream(s.getOutputStream());
-		DataInputStream in = new DataInputStream(s.getInputStream());
-
-		String request = in.readUTF();
-		String response = "";
-
-		switch (request) {
-		case "BACKUP":
-			response = node.backup(out, in);
-			break;
-		case "RESTORE":
-			response = node.restore(out, in);
-			break;
-		case "DELETE":
-			response = node.delete(out, in);
-			break;
-		default:
-			break;
-		}
-
-		System.out.println(response);
-		out.writeUTF("oioioi");
-
-		in.close();
-		out.close();
-		s.close();
+		node.executor.execute(new ClientRequestListenerThread(node));
 	}
 }
