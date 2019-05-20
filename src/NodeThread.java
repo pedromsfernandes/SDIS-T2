@@ -18,7 +18,7 @@ public class NodeThread implements Runnable {
 	}
 
 	public void findSuccessor(SSLSocket connection, String[] args) {
-		ExternalNode successor = node.findSuccessor(new BigInteger(1, new BigInteger(args[2],16).toString(16).getBytes()));
+		ExternalNode successor = node.findSuccessor(new BigInteger(args[1]),new BigInteger(1, new BigInteger(args[2],16).toString(16).getBytes()));
 
 		String response = "SUCCESSOR " + node.id + " ";
 
@@ -37,7 +37,7 @@ public class NodeThread implements Runnable {
 	}
 
 	public void getPredecessor(SSLSocket connection, String[] args) {
-		ExternalNode predecessor = node.getPredecessor();
+		ExternalNode predecessor = node.getPredecessor(new BigInteger(args[1]));
 
 		String response = "PREDECESSOR " + node.id + " ";
 
@@ -56,7 +56,7 @@ public class NodeThread implements Runnable {
 	}
 
 	public void notify(SSLSocket connection, String[] args) {
-		node.notify(new ExternalNode(args[2], Integer.parseInt(args[3])));
+		node.notify(new BigInteger(args[1]), new ExternalNode(args[2], Integer.parseInt(args[3])));
 
 		try {
 			DataOutputStream out = new DataOutputStream(connection.getOutputStream());
@@ -81,7 +81,7 @@ public class NodeThread implements Runnable {
 		}
 	}
 
-	public void getKeys(SSLSocket connection, String[] args) {
+	public void giveKeys(SSLSocket connection, String[] args) {
 		//TODO
 	}
 
@@ -97,7 +97,7 @@ public class NodeThread implements Runnable {
 			case "GETPREDECESSOR": getPredecessor(connection, args);
 			case "NOTIFY": notify(connection, args);
 			case "HI": hi(connection, args);
-			case "GETKEYS": getKeys(connection, args);
+			case "GIVEKEYS": giveKeys(connection, args);
 		}
 	}
 

@@ -24,19 +24,18 @@ public class Node extends ExternalNode {
 		this.predecessor = this;
 		this.successor = this;
 
-		fingerTable = new ExternalNode[this.id.bitLength()];
+		fingerTable = new ExternalNode[160];
 		for(int i = 0; i < fingerTable.length; i++)
 			fingerTable[i] = this;
 
 		executor = Executors.newScheduledThreadPool(25);
 		executor.execute(new NodeThread(this));
-		executor.scheduleAtFixedRate(new StabilizeThread(this), 0, 5, TimeUnit.SECONDS);
+		executor.scheduleAtFixedRate(new StabilizeThread(this), 0, 15, TimeUnit.SECONDS);
 	}
 
 	public void join(ExternalNode ringNode) throws UnknownHostException, IOException {
 		this.predecessor = null;
-		this.successor = ringNode.findSuccessor(this.id);
-		//this.successor.getKeys();
+		this.successor = ringNode.findSuccessor(this.id, this.id);
 		fingerTable[0] = this.successor;
 	}
 
@@ -47,7 +46,7 @@ public class Node extends ExternalNode {
 		return (id.compareTo(lhs) >= 0) && (id.compareTo(rhs) <= 0);
 	}
 
-	public ExternalNode findSuccessor(BigInteger id) {
+	public ExternalNode findSuccessor(BigInteger requestId, BigInteger id) {
 		if(id.equals(this.id))
 			return this;
 
@@ -60,7 +59,7 @@ public class Node extends ExternalNode {
 			if(n0.id.equals(this.id))
 				return this;
 
-			return n0.findSuccessor(id);
+			return n0.findSuccessor(this.id, id);
 		}
 	}
 
@@ -72,44 +71,44 @@ public class Node extends ExternalNode {
 		return this;
 	}
 
-	public ExternalNode getPredecessor() {
+	public ExternalNode getPredecessor(BigInteger requestId) {
 		return this.predecessor;
 	}
 
-	public void notify(ExternalNode other) {
-		if(this.predecessor == null || this.id.equals(this.predecessor.id) || idBetween(other.id, this.predecessor.id, this.id))
+	public void notify(BigInteger requestId, ExternalNode other) {
+		if(this.predecessor == null || this.id.equals(this.predecessor.id) || idBetween(other.id, this.predecessor.id, this.id)) {
 			this.predecessor = other;
+			//this.predecessor.giveKeys(this.id); Calculate keys to give first
+		}
 	}
 
 	public void stabilize() {
-		ExternalNode x = this.successor.getPredecessor();
+		ExternalNode x = this.successor.getPredecessor(this.id);
 
 		if(x != null && !this.id.equals(x.id) && (this.id.equals(this.successor.id) || idBetween(x.id, this.id, successor.id))) {
 			this.successor = x;
-			//this.successor.getKeys();
 			fingerTable[0] = x;
 		}
 
-		this.successor.notify(this);
+		this.successor.notify(this.id, this);
 	}
 
 	public void fixFingers() {
 		for(int i = 0; i < fingerTable.length; i++) {
-			fingerTable[i] = findSuccessor(this.id.add(new BigInteger(1,(Integer.toString((int) Math.pow(2,i))).getBytes())).mod(new BigInteger(1,(Integer.toString((int) Math.pow(2,this.id.bitLength()))).getBytes())));
+			fingerTable[i] = findSuccessor(this.id, this.id.add(new BigInteger(1,(Integer.toString((int) Math.pow(2,i))).getBytes())).mod(new BigInteger(1,(Integer.toString((int) Math.pow(2,this.id.bitLength()))).getBytes())));
 
 			if(i == 0) {
 				this.successor = fingerTable[0];
-				//this.successor.getKeys();
 			}
 		}
 	}
 
-	public boolean failed() {
+	public boolean failed(BigInteger requestId) {
 		return false;
 	}
 
 	public void checkPredecessor() {
-		if(this.predecessor != null && this.predecessor.failed())
+		if(this.predecessor != null && this.predecessor.failed(this.id))
 			this.predecessor = null;
 	}
 

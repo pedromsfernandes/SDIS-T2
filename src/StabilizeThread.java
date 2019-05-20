@@ -10,7 +10,7 @@ public class StabilizeThread implements Runnable {
 
 	public void run() {
 		node.stabilize();
-		//node.fixFingers();
+		node.fixFingers();
 		node.checkPredecessor();
 	}
 }

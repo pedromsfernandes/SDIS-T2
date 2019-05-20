@@ -33,7 +33,7 @@ public class ExternalNode {
 		this.port = port;
 	}
 
-	public ExternalNode findSuccessor(BigInteger id) {
+	public ExternalNode findSuccessor(BigInteger requestId, BigInteger id) {
 		try {
 			SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
 			SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
@@ -41,7 +41,7 @@ public class ExternalNode {
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-			String message = "FINDSUCCESSOR " + this.id + " " + id + " \n";
+			String message = "FINDSUCCESSOR " + requestId + " " + id + " \n";
 
 			out.writeBytes(message);
 
@@ -49,7 +49,7 @@ public class ExternalNode {
 
 			socket.close();
 
-			System.out.println("[Node " + this.id + "] " + response);
+			System.out.println("[Node " + requestId + "] " + response);
 
 			String[] args = response.split(" ");
 
@@ -68,7 +68,7 @@ public class ExternalNode {
 		return null;
 	}
 
-	public ExternalNode getPredecessor() {
+	public ExternalNode getPredecessor(BigInteger requestId) {
 		try {
 			SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
 			String response;
@@ -77,14 +77,14 @@ public class ExternalNode {
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-			String message = "GETPREDECESSOR " + this.id + " \n";
+			String message = "GETPREDECESSOR " + requestId + " \n";
 
 			out.writeBytes(message);
 
 			response = in.readLine().trim();
 
 			socket.close();
-			System.out.println("[Node " + this.id + "] " + response);
+			System.out.println("[Node " + requestId + "] " + response);
 
 			String[] args = response.split(" ");
 
@@ -103,7 +103,7 @@ public class ExternalNode {
 		return null;
 	}
 
-	public void notify(ExternalNode other) {
+	public void notify(BigInteger requestId, ExternalNode other) {
 		try {
 			SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
 			SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
@@ -111,7 +111,7 @@ public class ExternalNode {
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-			String message = "NOTIFY " + this.id + " " + other.ip + " " + other.port + " \n";
+			String message = "NOTIFY " + requestId + " " + other.ip + " " + other.port + " \n";
 
 
 			out.writeBytes(message);
@@ -126,7 +126,7 @@ public class ExternalNode {
 		}
 	}
 
-	public boolean failed() {
+	public boolean failed(BigInteger requestId) {
 		try {
 			SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
 			SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
@@ -134,10 +134,10 @@ public class ExternalNode {
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-			String message = "HI " + this.id + " \n";
+			String message = "HI " + requestId + " \n";
 
 			out.writeBytes(message);
-			System.out.println("[Node " + this.id + "] " + in.readLine());
+			System.out.println("[Node " + requestId + "] " + in.readLine());
 			socket.close();
 
 			return false;
@@ -152,14 +152,14 @@ public class ExternalNode {
 		return true;
 	}
 
-	public void getKeys() {
+	public void giveKeys(BigInteger requestId) {
 		try {
 			SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
 			SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
 
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-			String message = "GETKEYS " + this.id + " \n";
+			String message = "GIVEKEYS " + requestId + " \n";
 
 			out.writeBytes(message);
 
