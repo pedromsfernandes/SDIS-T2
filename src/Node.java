@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -76,13 +78,32 @@ public class Node extends ExternalNode {
 		return this.predecessor;
 	}
 
+	public HashMap<BigInteger,String> computeKeys(BigInteger otherId) {
+		HashMap<BigInteger,String> keysToGive = new HashMap<>();
+
+		Enumeration<BigInteger> mapKeys = keys.keys();
+
+		while(mapKeys.hasMoreElements()) {
+			BigInteger i = mapKeys.nextElement();
+
+			if(i.compareTo(otherId) < 0)
+			{
+				keysToGive.put(i, keys.get(i));
+				keys.remove(i);
+			} 
+		}
+
+		return keysToGive;
+	}
+
 	public void notify(BigInteger requestId, ExternalNode other) {
 		if(this.predecessor == null || !this.predecessor.id.equals(this.id) || idBetween(other.id, this.predecessor.id, this.id)) {			
 			if(other.id.equals(this.id))
 				return;
 
 			this.predecessor = other;
-			//this.predecessor.giveKeys(this.id); Calculate keys to give first
+
+			this.predecessor.giveKeys(this.id, computeKeys(other.id));
 		}
 	}
 

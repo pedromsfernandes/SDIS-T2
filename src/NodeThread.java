@@ -82,7 +82,22 @@ public class NodeThread implements Runnable {
 	}
 
 	public void giveKeys(SSLSocket connection, String[] args) {
-		//TODO
+		try {
+			BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+
+			for(int i = 0; i < Integer.parseInt(args[2]); i++) {
+				String message = in.readLine();
+				String[] lineArgs = message.split(" ", 2);
+				node.keys.put(new BigInteger(lineArgs[0]), lineArgs[0]);
+			}
+
+			DataOutputStream out = new DataOutputStream(connection.getOutputStream());
+
+			out.writeBytes("OK\n");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public void interpretMessage(SSLSocket connection) throws IOException {

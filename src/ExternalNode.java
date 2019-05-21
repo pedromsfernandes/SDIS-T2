@@ -6,6 +6,8 @@ import java.math.BigInteger;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.security.MessageDigest;
+import java.util.HashMap;
+import java.util.Iterator;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
@@ -151,14 +153,24 @@ public class ExternalNode {
 		return true;
 	}
 
-	public void giveKeys(BigInteger requestId) {
+	public void giveKeys(BigInteger requestId, HashMap<BigInteger,String> keys) {
+		if(keys.size() == 0)
+			return;
+
 		try {
 			SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
 			SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
 
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-			String message = "GIVEKEYS " + requestId + " \n";
+			String message = "GIVEKEYS " + requestId + " " + keys.size() + " \n";
+
+			Iterator<BigInteger> it = keys.keySet().iterator();
+
+			while(it.hasNext()) {
+				BigInteger i = it.next();
+				message += i + " " + keys.get(i) + "\n";
+			}
 
 			out.writeBytes(message);
 
