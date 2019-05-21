@@ -2,7 +2,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -16,12 +15,14 @@ public class Node extends ExternalNode {
 	ExternalNode predecessor;
 	ExternalNode successor;
 	ExternalNode[] fingerTable;
-	ConcurrentHashMap<BigInteger,String> keys;
+	ConcurrentHashMap<BigInteger, String> keys;
+	Storage storage;
 
 	Node(String ip,int port) throws UnknownHostException {
 		super(ip, port);
 
 		keys = new ConcurrentHashMap<>();
+		storage = new Storage(id.toString());
 
 		this.predecessor = null;
 		this.successor = this;
@@ -34,6 +35,7 @@ public class Node extends ExternalNode {
 		executor.execute(new NodeThread(this));
 		executor.scheduleAtFixedRate(new StabilizeThread(this), 15, 15, TimeUnit.SECONDS);
 	}
+
 	public void join(ExternalNode ringNode) throws UnknownHostException, IOException {
 		this.predecessor = null;
 		this.successor = ringNode.findSuccessor(this.id, this.id);
@@ -144,8 +146,27 @@ public class Node extends ExternalNode {
 			byte[] message = new byte[length];
 			in.readFully(message, 0, message.length); // read the message
 
-			// TODO: iniciar thread para enviar cada chunk para replicationDegree nodes
-			// executor.execute(new ChunkSenderThread(this, message, ip, port));
+			String[] header = Utils.getHeader(message);
+			byte[] content = Utils.getChunkContent(message, length);
+
+
+			for(int j = 0; j < Integer.parseInt(header[3]); j++){
+				String key = header[1] + "-" + header[2] + "-" + j;
+				System.out.println(key);
+				BigInteger encrypted = Utils.getSHA1(key);
+				BigInteger fileName = Utils.getSHA1(header[1]);
+
+				ExternalNode successor = this.findSuccessor(this.id, encrypted);
+				
+				if(successor == this){
+					storeChunk(fileName, String.valueOf(chunks), encrypted, content);
+				}
+				else{
+					System.out.println("NOT ME");
+					executor.execute(new ChunkSenderThread(this, successor, fileName, chunks, encrypted, content));
+				}
+
+			}
 		}
 
 
@@ -168,7 +189,20 @@ public class Node extends ExternalNode {
 
 	public static void main(String[] args) throws IOException {
 
-		Node node = new Node("10.227.155.126",Integer.parseInt(args[0]));
+		Node node = new Node(args[0],Integer.parseInt(args[1]));
 		node.executor.execute(new ClientRequestListenerThread(node));
+	}
+
+	public Storage getStorage() {
+		return storage;
+	}
+
+	public void setStorage(Storage storage) {
+		this.storage = storage;
+	}
+
+	public void storeChunk(BigInteger fileName, String numChunks, BigInteger key, byte[] chunk) {
+		this.keys.put(fileName, numChunks);
+		this.storage.storeChunk(key, chunk);
 	}
 }

@@ -3,9 +3,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.math.BigInteger;
-import java.net.Socket;
 import java.net.UnknownHostException;
-import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -19,14 +17,7 @@ public class ExternalNode {
 
 	private static BigInteger getId(String ip, int port) {
 		String info = ip + ":" + port;
-		try {
-			MessageDigest digest = MessageDigest.getInstance("SHA-1");
-			byte[] encoded = digest.digest(info.getBytes());
-			return new BigInteger(1,encoded);
-		} catch (Exception e) {
-			e.printStackTrace();
-			return new BigInteger(1,"0".getBytes());
-		}
+		return Utils.getSHA1(info);
 	}
 
 	ExternalNode(String ip, int port) {
@@ -153,8 +144,8 @@ public class ExternalNode {
 		return true;
 	}
 
-	public void giveKeys(BigInteger requestId, HashMap<BigInteger,String> keys) {
-		if(keys.size() == 0)
+	public void giveKeys(BigInteger requestId, HashMap<BigInteger, String> keys) {
+		if (keys.size() == 0)
 			return;
 
 		try {
@@ -167,7 +158,7 @@ public class ExternalNode {
 
 			Iterator<BigInteger> it = keys.keySet().iterator();
 
-			while(it.hasNext()) {
+			while (it.hasNext()) {
 				BigInteger i = it.next();
 				message += i + " " + keys.get(i) + "\n";
 			}

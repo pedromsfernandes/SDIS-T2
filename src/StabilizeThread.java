@@ -1,6 +1,3 @@
-import java.io.IOException;
-import java.net.UnknownHostException;
-
 public class StabilizeThread implements Runnable {
 	private Node node;
 

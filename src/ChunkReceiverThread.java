@@ -1,8 +1,8 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 
-import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLSocket;
 
 class ChunkReceiverThread implements Runnable {
@@ -10,25 +10,20 @@ class ChunkReceiverThread implements Runnable {
     private Node peer;
     private DataInputStream dis;
     private DataOutputStream dos;
-    private byte[] file;
-    private SSLServerSocket serverSocket;
+    private SSLSocket server;
 
-    public ChunkReceiverThread(Node peer, SSLServerSocket serverSocket, byte[] file) {
+    public ChunkReceiverThread(Node peer, SSLSocket server) {
         this.peer = peer;
-        this.file = file;
-        this.serverSocket = serverSocket;
+        this.server = server;
     }
 
     @Override
     public void run() {
 
-        while (!serverSocket.isClosed()) {
             try {
 
-                SSLSocket server;
 
                 try {
-                    server = (SSLSocket) serverSocket.accept();
                     this.dis = new DataInputStream(server.getInputStream());
                     this.dos = new DataOutputStream(server.getOutputStream());
 
@@ -37,30 +32,23 @@ class ChunkReceiverThread implements Runnable {
                     e.printStackTrace();
                 }
 
-                int chunk = dis.readInt();
-                // boolean acceptChunk = !peer.getStorage().hasRestoredChunk(Utils.bytesToHex(file) + "-" + chunk);
-
-                // dos.writeBoolean(acceptChunk);
-                // dos.flush();
-
-                // if (!acceptChunk) {
-                //     continue;
-                // }
+                System.out.println("CHEGUEI CRL");
+                String fileName = dis.readUTF();
+                String numChunks = dis.readUTF();
+                String key = dis.readUTF();
 
                 int length = dis.readInt(); // read length of incoming message
                 if (length > 0) {
-                    byte[] message = new byte[length];
-                    dis.readFully(message, 0, message.length); // read the message
+                    byte[] chunk = new byte[length];
+                    dis.readFully(chunk, 0, chunk.length); // read the message
 
-                    String[] header = Utils.getHeader(message);
-                    byte[] chunkContent = Utils.getChunkContent(message, length);
-
+                    peer.storeChunk(new BigInteger(fileName), numChunks, new BigInteger(key), chunk);
                 }
             } catch (IOException e1) {
                 // TODO Auto-generated catch block
                 e1.printStackTrace();
             }
-        }
+
     }
 
 }

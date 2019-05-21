@@ -4,8 +4,15 @@ $ javac src/*.java
 
 Run
 
-Server: java "-Djavax.net.ssl.keyStore=keystore" "-Djavax.net.ssl.keyStorePassword=sdis1822" Server
+Server: java "-Djavax.net.ssl.keyStore=keystore" "-Djavax.net.ssl.keyStorePassword=sdis1822" Node
 
 TestApp: java "-Djavax.net.ssl.trustStore=trustStore" "-Djavax.net.ssl.trustStorePassword=sdis1822" TestApp <PROTOCOL> <opnd_1> <opnd_2>
 
 java "-Djavax.net.ssl.keyStore=keystore" "-Djavax.net.ssl.keyStorePassword=sdis1822" "-Djavax.net.ssl.trustStore=truststore" "-Djavax.net.ssl.trustStorePassword=sdis1822" ChordTest
+
+
+EXEMPLOS:
+
+java "-Djavax.net.ssl.trustStore=truststore" "-Djavax.net.ssl.trustStorePassword=sdis1822" TestApp localhost 8080 BACKUP ~/Transferências/a154ffbcec538a4161a406abf62f5b76-original.pdf 1
+
+java "-Djavax.net.ssl.keyStore=keystore" "-Djavax.net.ssl.keyStorePassword=sdis1822" "-Djavax.net.ssl.trustStore=truststore" "-Djavax.net.ssl.trustStorePassword=sdis1822" Node localhost 8000

@@ -20,7 +20,7 @@ class ClientRequestListenerThread implements Runnable {
         SSLServerSocket ss = null;
 
         try {
-            ss = (SSLServerSocket) ssf.createServerSocket(8081);
+            ss = (SSLServerSocket) ssf.createServerSocket(node.port + 80);
         } catch (IOException e1) {
             // TODO Auto-generated catch block
             e1.printStackTrace();

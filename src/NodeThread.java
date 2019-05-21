@@ -3,8 +3,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.math.BigInteger;
-import java.net.ServerSocket;
-import java.net.Socket;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
@@ -18,14 +16,16 @@ public class NodeThread implements Runnable {
 	}
 
 	public void findSuccessor(SSLSocket connection, String[] args) {
-		ExternalNode successor = node.findSuccessor(new BigInteger(args[1]),new BigInteger(1, new BigInteger(args[2],16).toString(16).getBytes()));
+		ExternalNode successor = node.findSuccessor(new BigInteger(args[1]),
+				new BigInteger(1, new BigInteger(args[2], 16).toString(16).getBytes()));
 
 		String response = "SUCCESSOR " + node.id + " ";
 
-		if(successor == null)
+		if (successor == null)
 			response += "NOTFOUND \n";
 
-		else response += successor.ip + " " + successor.port + " \n";
+		else
+			response += successor.ip + " " + successor.port + " \n";
 
 		try {
 			DataOutputStream out = new DataOutputStream(connection.getOutputStream());
@@ -41,10 +41,11 @@ public class NodeThread implements Runnable {
 
 		String response = "PREDECESSOR " + node.id + " ";
 
-		if(predecessor == null)
+		if (predecessor == null)
 			response += "NOTFOUND \n";
 
-		else response += predecessor.ip + " " + predecessor.port + " \n";
+		else
+			response += predecessor.ip + " " + predecessor.port + " \n";
 
 		try {
 			DataOutputStream out = new DataOutputStream(connection.getOutputStream());
@@ -85,7 +86,7 @@ public class NodeThread implements Runnable {
 		try {
 			BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 
-			for(int i = 0; i < Integer.parseInt(args[2]); i++) {
+			for (int i = 0; i < Integer.parseInt(args[2]); i++) {
 				String message = in.readLine();
 				String[] lineArgs = message.split(" ", 2);
 				node.keys.put(new BigInteger(lineArgs[0]), lineArgs[0]);
@@ -107,17 +108,25 @@ public class NodeThread implements Runnable {
 		System.out.println("[Node " + node.id + "] " + message);
 		String[] args = message.split(" ");
 
-		switch(args[0]) {
-			case "FINDSUCCESSOR": findSuccessor(connection, args);
-				break;
-			case "GETPREDECESSOR": getPredecessor(connection, args);
-				break;
-			case "NOTIFY": notify(connection, args);
-				break;
-			case "HI": hi(connection, args);
-				break;
-			case "GIVEKEYS": giveKeys(connection, args);
-				break;
+		switch (args[0]) {
+		case "FINDSUCCESSOR":
+			findSuccessor(connection, args);
+			break;
+		case "GETPREDECESSOR":
+			getPredecessor(connection, args);
+			break;
+		case "NOTIFY":
+			notify(connection, args);
+			break;
+		case "HI":
+			hi(connection, args);
+			break;
+		case "GIVEKEYS":
+			giveKeys(connection, args);
+			break;
+		case "BACKUP":
+			node.executor.execute(new ChunkReceiverThread(node, connection));
+			break;
 		}
 	}
 
@@ -125,19 +134,19 @@ public class NodeThread implements Runnable {
 		try {
 			SSLServerSocketFactory ssf = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
 			SSLServerSocket listenSocket = (SSLServerSocket) ssf.createServerSocket(node.port);
-			
-			while(true) {
+
+			while (true) {
 				SSLSocket connection = (SSLSocket) listenSocket.accept();
-				node.executor.execute(new Runnable(){
+				node.executor.execute(new Runnable() {
 					public void run() {
 						try {
 							interpretMessage(connection);
 						} catch (IOException e) {
 						}
 					}
-				});		
+				});
 			}
-		} catch(Exception e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}

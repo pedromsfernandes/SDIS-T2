@@ -1,5 +1,7 @@
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.Map;
@@ -8,9 +10,11 @@ import java.util.concurrent.ConcurrentHashMap;
 class Storage {
 
     private ConcurrentHashMap<String, byte[]> restoredChunks;
+    private String chunksPath;
 
-    public Storage() {
-
+    public Storage(String nodeId) {
+        chunksPath = "chunks-" + nodeId;
+        new File(chunksPath).mkdirs();
     }
 
     public void restoreFile(String fileId, String fileName) throws IOException {
@@ -44,5 +48,28 @@ class Storage {
         }
 
         return chunks;
+    }
+
+    public void storeChunk(BigInteger key, byte[] chunk) {
+        String path = chunksPath + "/" + key.toString() + ".chunk";
+        
+        try {
+
+            FileOutputStream fout = new FileOutputStream(path);
+            FileChannel fcout = fout.getChannel();
+    
+            ByteBuffer buffer = ByteBuffer.allocate(64 * 1000);
+    
+            buffer.clear();
+            buffer.put(chunk);
+            buffer.flip();
+            fcout.write(buffer);
+    
+            fout.close();
+        }
+        catch(IOException e){
+            e.printStackTrace();
+        }
+
     }
 }

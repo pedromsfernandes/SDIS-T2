@@ -1,3 +1,4 @@
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -64,6 +65,17 @@ public class Utils {
 		System.arraycopy(b, 0, c, a.length, b.length);
 
 		return c;
+	}
+
+	public static BigInteger getSHA1(String input){
+		try {
+			MessageDigest digest = MessageDigest.getInstance("SHA-1");
+			byte[] encoded = digest.digest(input.getBytes());
+			return new BigInteger(1,encoded);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new BigInteger(1,"0".getBytes());
+		}
 	}
 
 	public static byte[] getSHA(String input) {
