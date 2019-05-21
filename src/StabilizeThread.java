@@ -11,7 +11,7 @@ public class StabilizeThread implements Runnable {
 	public void run() {
 		try {
 			node.stabilize();
-			//node.fixFingers();
+			node.fixFingers();
 			node.checkPredecessor(); 
 
 			System.out.print("Pre: ");
@@ -28,7 +28,14 @@ public class StabilizeThread implements Runnable {
 
 			else System.out.print("null");
 
-			System.out.print("\n");
+			System.out.println("\nFingerTable:");
+
+			for(int i = 0; i < node.fingerTable.length; i++) {
+				if(node.fingerTable[i] == null)
+					System.out.println(i + ": null");
+
+				else System.out.println(i + ": " + node.fingerTable[i].id);
+			}
 		} catch(Exception e) {
 			e.printStackTrace();
 		}

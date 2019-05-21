@@ -35,7 +35,9 @@ public class Node extends ExternalNode {
 	public void join(ExternalNode ringNode) throws UnknownHostException, IOException {
 		this.predecessor = null;
 		this.successor = ringNode.findSuccessor(this.id, this.id);
-		fingerTable[0] = this.successor;
+
+		for(int i = 0; i < fingerTable.length; i++)
+			fingerTable[i] = this.successor;
 	}
 
 	public static boolean idBetween(BigInteger id, BigInteger lhs, BigInteger rhs) {
@@ -96,12 +98,9 @@ public class Node extends ExternalNode {
 	}
 
 	public void fixFingers() {
-		for(int i = 0; i < fingerTable.length; i++) {
-			fingerTable[i] = findSuccessor(this.id, this.id.add(new BigInteger(1,(Integer.toString((int) Math.pow(2,i))).getBytes())).mod(new BigInteger(1,(Integer.toString((int) Math.pow(2,this.id.bitLength()))).getBytes())));
-
-			if(i == 0) {
-				this.successor = fingerTable[0];
-			}
+		for(int i = 1; i < fingerTable.length; i++) {
+			BigInteger fingerID = (this.id.add(new BigInteger("2").pow(i))).mod(new BigInteger("2").pow(fingerTable.length));
+			fingerTable[i] = findSuccessor(this.id, fingerID);
 		}
 	}
 
