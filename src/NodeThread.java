@@ -61,7 +61,7 @@ public class NodeThread implements Runnable {
 		try {
 			DataOutputStream out = new DataOutputStream(connection.getOutputStream());
 
-			out.writeBytes("OK");
+			out.writeBytes("OK\n");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -94,10 +94,15 @@ public class NodeThread implements Runnable {
 
 		switch(args[0]) {
 			case "FINDSUCCESSOR": findSuccessor(connection, args);
+				break;
 			case "GETPREDECESSOR": getPredecessor(connection, args);
+				break;
 			case "NOTIFY": notify(connection, args);
+				break;
 			case "HI": hi(connection, args);
+				break;
 			case "GIVEKEYS": giveKeys(connection, args);
+				break;
 		}
 	}
 
@@ -117,6 +122,8 @@ public class NodeThread implements Runnable {
 					}
 				});		
 			}
-		} catch(Exception e) {}
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
 	}
 }

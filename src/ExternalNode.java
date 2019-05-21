@@ -42,7 +42,6 @@ public class ExternalNode {
 			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
 			String message = "FINDSUCCESSOR " + requestId + " " + id + " \n";
-
 			out.writeBytes(message);
 
 			String response = in.readLine().trim();
@@ -113,8 +112,8 @@ public class ExternalNode {
 
 			String message = "NOTIFY " + requestId + " " + other.ip + " " + other.port + " \n";
 
-
 			out.writeBytes(message);
+
 			in.readLine();
 			socket.close();
 		} catch (UnknownHostException e) {

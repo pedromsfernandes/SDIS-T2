@@ -4,24 +4,24 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.Hashtable;
 
 public class Node extends ExternalNode {
 	ScheduledExecutorService executor;
 	ExternalNode predecessor;
 	ExternalNode successor;
 	ExternalNode[] fingerTable;
-	Hashtable<BigInteger,String> keys;
+	ConcurrentHashMap<BigInteger,String> keys;
 
 	Node(String ip,int port) throws UnknownHostException {
 		super(ip, port);
 
-		keys = new Hashtable<>();
+		keys = new ConcurrentHashMap<>();
 
-		this.predecessor = this;
+		this.predecessor = null;
 		this.successor = this;
 
 		fingerTable = new ExternalNode[160];
@@ -30,9 +30,8 @@ public class Node extends ExternalNode {
 
 		executor = Executors.newScheduledThreadPool(25);
 		executor.execute(new NodeThread(this));
-		executor.scheduleAtFixedRate(new StabilizeThread(this), 0, 15, TimeUnit.SECONDS);
+		executor.scheduleAtFixedRate(new StabilizeThread(this), 15, 15, TimeUnit.SECONDS);
 	}
-
 	public void join(ExternalNode ringNode) throws UnknownHostException, IOException {
 		this.predecessor = null;
 		this.successor = ringNode.findSuccessor(this.id, this.id);
@@ -76,7 +75,10 @@ public class Node extends ExternalNode {
 	}
 
 	public void notify(BigInteger requestId, ExternalNode other) {
-		if(this.predecessor == null || this.id.equals(this.predecessor.id) || idBetween(other.id, this.predecessor.id, this.id)) {
+		if(this.predecessor == null || !this.predecessor.id.equals(this.id) || idBetween(other.id, this.predecessor.id, this.id)) {			
+			if(other.id.equals(this.id))
+				return;
+
 			this.predecessor = other;
 			//this.predecessor.giveKeys(this.id); Calculate keys to give first
 		}
