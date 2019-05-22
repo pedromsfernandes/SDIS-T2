@@ -136,9 +136,24 @@ public class Node extends ExternalNode {
 			this.predecessor = null;
 	}
 
-	public String backup(DataOutputStream out, DataInputStream in) throws IOException {
-		String response = "";
+	public void storeKey(BigInteger requestId, BigInteger encrypted, String value) {
+		keys.put(encrypted, value);
+	}
 
+	public String getKey(BigInteger requestId, BigInteger encrypted) {
+		return keys.get(encrypted);
+	}
+
+	public void deleteKey(BigInteger requestId, BigInteger encrypted) {
+		keys.remove(encrypted);
+	}
+
+	public void deleteChunk(BigInteger requestId, BigInteger encrypted) {
+		keys.remove(encrypted);
+		storage.delete(encrypted);
+	}
+
+	public String backup(DataOutputStream out, DataInputStream in) throws IOException {
 		int chunks = in.readInt();
 
 		for(int i = 0; i < chunks; i++){
@@ -149,48 +164,120 @@ public class Node extends ExternalNode {
 			String[] header = Utils.getHeader(message);
 			byte[] content = Utils.getChunkContent(message, length);
 
+			if(i == 0) {
+				String key = header[1];
+				BigInteger encrypted = Utils.getSHA1(key);
+
+				ExternalNode successor = this.findSuccessor(this.id, encrypted);
+
+				if(successor.id == this.id) {
+					this.storeKey(this.id, encrypted, chunks + ":" + header[3]);
+				} else {
+					successor.storeKey(this.id, encrypted, chunks + ":" + header[3]);
+				}
+			}
 
 			for(int j = 0; j < Integer.parseInt(header[3]); j++){
 				String key = header[1] + "-" + header[2] + "-" + j;
-				System.out.println(key);
 				BigInteger encrypted = Utils.getSHA1(key);
-				BigInteger fileName = Utils.getSHA1(header[1]);
 
 				ExternalNode successor = this.findSuccessor(this.id, encrypted);
 				
-				if(successor == this){
-					storeChunk(fileName, String.valueOf(chunks), encrypted, content);
+				if(successor.id == this.id){
+					storeChunk(encrypted, key, content);
 				}
 				else{
-					System.out.println("NOT ME");
-					executor.execute(new ChunkSenderThread(this, successor, fileName, chunks, encrypted, content));
+					executor.execute(new ChunkSenderThread(this, successor, encrypted, key, content));
 				}
 
 			}
 		}
 
-
-		return response;
+		return "BACKED UP";
 	}
 
-	public String restore(DataOutputStream out, DataInputStream in) {
-		String response = "";
+	public String restore(DataOutputStream out, DataInputStream in) throws IOException {
+		String fileName = in.readUTF();
+		BigInteger encrypted = Utils.getSHA1(fileName);
+
+		ExternalNode successor = this.findSuccessor(this.id, encrypted);
+
+		String value;
+
+		if(successor.id == this.id){
+			value = this.getKey(this.id, encrypted);
+		}
+		else {
+			value = successor.getKey(this.id, encrypted);
+		}
+
+		//PEDIR CHUNKS, E MANDAR DE VOLTA PARA O TESTAPP
+
+		// String[] args = value.split(":",2);
+		// int chunks = Integer.parseInt(args[0]);
+
+		// for(int i = 0; i < chunks; i++) {
+		// 	String key = fileName + "-" + i + "-0";
+		// 	BigInteger chunkID = Utils.getSHA1(key);
+
+		// 	ExternalNode successor = this.findSuccessor(this.id, encrypted);
+		// }
 
 
-		return response;
+		return "RESTORED";
 	}
 
-	public String delete(DataOutputStream out, DataInputStream in) {
-		String response = "";
+	public String delete(DataOutputStream out, DataInputStream in) throws IOException {
+		String fileName = in.readUTF();
+		BigInteger encrypted = Utils.getSHA1(fileName);
 
+		ExternalNode successor = this.findSuccessor(this.id, encrypted);
 
-		return response;
+		String value;
+
+		if(successor.id == this.id){
+			value = this.getKey(this.id, encrypted);
+		}
+		else {
+			value = successor.getKey(this.id, encrypted);
+		}
+
+		String[] args = value.split(":",2);
+		int chunks = Integer.parseInt(args[0]);
+		int repDegree = Integer.parseInt(args[1]);
+
+		for(int i = 0; i < chunks; i++){
+			for(int j = 0; j < repDegree; j++){
+				String key = fileName + "-" + i + "-" + j;
+				BigInteger chunkID = Utils.getSHA1(key);
+
+				ExternalNode chunkSuccessor = this.findSuccessor(this.id, encrypted);
+				
+				if(successor.id == this.id) {
+					deleteChunk(this.id, chunkID);
+				}
+				else {
+					chunkSuccessor.deleteChunk(this.id, chunkID);
+				}
+			}
+		}
+
+		if(successor.id == this.id){
+			this.deleteKey(this.id, encrypted);
+		}
+		else {
+			successor.deleteKey(this.id, encrypted);
+		}
+
+		return "DELETED";
 	}
 
 	public static void main(String[] args) throws IOException {
-
 		Node node = new Node(args[0],Integer.parseInt(args[1]));
 		node.executor.execute(new ClientRequestListenerThread(node));
+
+		if(args.length == 4)
+			node.join(new ExternalNode(args[2],Integer.parseInt(args[3])));
 	}
 
 	public Storage getStorage() {
@@ -201,8 +288,8 @@ public class Node extends ExternalNode {
 		this.storage = storage;
 	}
 
-	public void storeChunk(BigInteger fileName, String numChunks, BigInteger key, byte[] chunk) {
-		this.keys.put(fileName, numChunks);
+	public void storeChunk(BigInteger key, String value, byte[] chunk) {
+		this.keys.put(key, value);
 		this.storage.storeChunk(key, chunk);
 	}
 }

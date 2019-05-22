@@ -11,16 +11,14 @@ class ChunkSenderThread implements Runnable {
     private DataOutputStream dos;
     private DataInputStream dis;
     private BigInteger key;
-    private BigInteger fileName;
-    private int numChunks;
+    private String value;
     private byte[] content;
     
-    public ChunkSenderThread(Node peer, ExternalNode successor, BigInteger fileName, int numChunks, BigInteger key, byte[] content){
+    public ChunkSenderThread(Node peer, ExternalNode successor, BigInteger key, String value, byte[] content){
 
         this.key = key;
         this.content = content;
-        this.numChunks = numChunks;
-        this.fileName = fileName;
+        this.value = value;
 
         SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
         try {
@@ -37,9 +35,8 @@ class ChunkSenderThread implements Runnable {
     public void run() {
         try {
             dos.writeUTF("BACKUP\n");
-            dos.writeUTF(fileName.toString()); 
-            dos.writeUTF(String.valueOf(numChunks)); 
             dos.writeUTF(key.toString()); 
+            dos.writeUTF(value); 
             dos.writeInt(content.length);
             dos.write(content);
             dos.flush();

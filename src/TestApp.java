@@ -124,11 +124,9 @@ class TestApp {
         return chunks;
     }
 
-    public static byte[] buildBackupMessage(byte[] fileId, int chunkNo, int replicationDegree, byte[] chunkContent) {
+    public static byte[] buildBackupMessage(String fileName, int chunkNo, int replicationDegree, byte[] chunkContent) {
 
-        String file = Utils.bytesToHex(fileId);
-
-        String header = "BACKUP " + file + " " + chunkNo + " " + replicationDegree + " \r\n\r\n";
+        String header = "BACKUP " + fileName + " " + chunkNo + " " + replicationDegree + " \r\n\r\n";
         byte[] header_b = header.getBytes(StandardCharsets.US_ASCII);
 
         return Utils.concatenateArrays(header_b, chunkContent);
@@ -137,15 +135,14 @@ class TestApp {
     private static void backup(String fileName, int replicationDegree, DataOutputStream out, DataInputStream in)
             throws IOException {
 
-        byte[] fileId = encryptFileId(fileName);
         ArrayList<byte[]> chunks = splitFile(fileName);
 
         out.writeUTF("BACKUP");
         out.writeInt(chunks.size());
 
         for (int i = 0; i < chunks.size(); i++) {
-            byte[] message = buildBackupMessage(fileId, i, replicationDegree, chunks.get(i));
-            out.writeInt(message.length);
+            byte[] message = buildBackupMessage(fileName, i, replicationDegree, chunks.get(i));
+			out.writeInt(message.length);
             out.write(message);
             out.flush();
         }
@@ -153,12 +150,16 @@ class TestApp {
         System.out.println(in.readUTF());
     }
 
-    private static void restore(String fileName, DataOutputStream out, DataInputStream in) {
-
+    private static void restore(String fileName, DataOutputStream out, DataInputStream in) throws IOException {
+		out.writeUTF("RESTORE");
+		out.writeUTF(fileName);
+		System.out.println(in.readUTF());
     }
 
-    private static void delete(String fileName, DataOutputStream out, DataInputStream in) {
-
+    private static void delete(String fileName, DataOutputStream out, DataInputStream in) throws IOException {
+		out.writeUTF("DELETE");
+		out.writeUTF(fileName);
+		System.out.println(in.readUTF());
     }
 
     public static void main(String[] args) throws IOException {

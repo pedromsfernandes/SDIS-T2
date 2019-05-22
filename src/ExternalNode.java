@@ -35,6 +35,7 @@ public class ExternalNode {
 			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
 			String message = "FINDSUCCESSOR " + requestId + " " + id + " \n";
+			System.out.println("[Node " + requestId + "] " + message);
 			out.writeBytes(message);
 
 			String response = in.readLine().trim();
@@ -70,7 +71,7 @@ public class ExternalNode {
 			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
 			String message = "GETPREDECESSOR " + requestId + " \n";
-
+			System.out.println("[Node " + requestId + "] " + message);
 			out.writeBytes(message);
 
 			response = in.readLine().trim();
@@ -104,7 +105,7 @@ public class ExternalNode {
 			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
 			String message = "NOTIFY " + requestId + " " + other.ip + " " + other.port + " \n";
-
+			System.out.println("[Node " + requestId + "] " + message);
 			out.writeBytes(message);
 
 			in.readLine();
@@ -127,7 +128,7 @@ public class ExternalNode {
 			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
 			String message = "HI " + requestId + " \n";
-
+			System.out.println("[Node " + requestId + "] " + message);
 			out.writeBytes(message);
 			System.out.println("[Node " + requestId + "] " + in.readLine());
 			socket.close();
@@ -153,8 +154,10 @@ public class ExternalNode {
 			SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
 
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
 			String message = "GIVEKEYS " + requestId + " " + keys.size() + " \n";
+			System.out.println("[Node " + requestId + "] " + message);
 
 			Iterator<BigInteger> it = keys.keySet().iterator();
 
@@ -164,7 +167,107 @@ public class ExternalNode {
 			}
 
 			out.writeBytes(message);
+			in.readLine();
+			socket.close();
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 
+	public void storeKey(BigInteger requestId, BigInteger encrypted, String value) {
+		try {
+			SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+			SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
+
+			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+			String message = "STOREKEY " + requestId + " " + encrypted + " " + value + " \n";
+			System.out.println("[Node " + requestId + "] " + message);
+			out.writeBytes(message);
+			in.readLine();
+			socket.close();
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public String getKey(BigInteger requestId, BigInteger id) {
+		try {
+			SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+			SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
+
+			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+			String message = "GETKEY " + requestId + " " + id + " \n";
+			System.out.println("[Node " + requestId + "] " + message);
+			out.writeBytes(message);
+
+			String response = in.readLine().trim();
+
+			socket.close();
+
+			System.out.println("[Node " + requestId + "] " + response);
+
+			String[] args = response.split(" ");
+
+			return args[2];
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return null;
+	}
+
+	public void deleteKey(BigInteger requestId, BigInteger key) {
+		try {
+			SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+			SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
+
+			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+			String message = "DELETEKEY " + requestId + " " + key + " \n";
+			System.out.println("[Node " + requestId + "] " + message);
+			out.writeBytes(message);
+
+			in.readLine();
+			socket.close();
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public void deleteChunk(BigInteger requestId, BigInteger key) {
+		try {
+			SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+			SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
+
+			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+			String message = "DELETECHUNK " + requestId + " " + key + " \n";
+			System.out.println("[Node " + requestId + "] " + message);
+			out.writeBytes(message);
+
+			in.readLine();
 			socket.close();
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block

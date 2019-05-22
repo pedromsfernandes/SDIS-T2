@@ -32,17 +32,15 @@ class ChunkReceiverThread implements Runnable {
                     e.printStackTrace();
                 }
 
-                System.out.println("CHEGUEI CRL");
-                String fileName = dis.readUTF();
-                String numChunks = dis.readUTF();
                 String key = dis.readUTF();
+                String value = dis.readUTF();
 
                 int length = dis.readInt(); // read length of incoming message
                 if (length > 0) {
                     byte[] chunk = new byte[length];
                     dis.readFully(chunk, 0, chunk.length); // read the message
 
-                    peer.storeChunk(new BigInteger(fileName), numChunks, new BigInteger(key), chunk);
+                    peer.storeChunk(new BigInteger(key), value, chunk);
                 }
             } catch (IOException e1) {
                 // TODO Auto-generated catch block

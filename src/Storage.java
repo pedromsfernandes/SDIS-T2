@@ -71,5 +71,10 @@ class Storage {
             e.printStackTrace();
         }
 
-    }
+	}
+	
+	public void delete(BigInteger key) {
+		String path = chunksPath + "/" + key.toString() + ".chunk";
+		new File(path).delete();
+	}
 }

@@ -25,14 +25,14 @@ public class StabilizeThread implements Runnable {
 
 			else System.out.print("null");
 
-			System.out.println("\nFingerTable:");
+			// System.out.println("\nFingerTable:");
 
-			for(int i = 0; i < node.fingerTable.length; i++) {
-				if(node.fingerTable[i] == null)
-					System.out.println(i + ": null");
+			// for(int i = 0; i < node.fingerTable.length; i++) {
+			// 	if(node.fingerTable[i] == null)
+			// 		System.out.println(i + ": null");
 
-				else System.out.println(i + ": " + node.fingerTable[i].id);
-			}
+			// 	else System.out.println(i + ": " + node.fingerTable[i].id);
+			// }
 		} catch(Exception e) {
 			e.printStackTrace();
 		}

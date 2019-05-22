@@ -17,7 +17,7 @@ public class NodeThread implements Runnable {
 
 	public void findSuccessor(SSLSocket connection, String[] args) {
 		ExternalNode successor = node.findSuccessor(new BigInteger(args[1]),
-				new BigInteger(1, new BigInteger(args[2], 16).toString(16).getBytes()));
+				new BigInteger(args[2]));
 
 		String response = "SUCCESSOR " + node.id + " ";
 
@@ -101,6 +101,59 @@ public class NodeThread implements Runnable {
 		}
 	}
 
+	public void storeKey(SSLSocket connection, String[] args) {
+		try {
+			node.storeKey(new BigInteger(args[1]), new BigInteger(args[2]), args[3]);
+
+			DataOutputStream out = new DataOutputStream(connection.getOutputStream());
+
+			out.writeBytes("OK\n");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public void getKey(SSLSocket connection, String[] args) {
+		String value = node.getKey(new BigInteger(args[1]), new BigInteger(args[2]));
+
+		String response = "KEY " + node.id + " " + value + " \n";
+
+		try {
+			DataOutputStream out = new DataOutputStream(connection.getOutputStream());
+			out.writeBytes(response);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public void deleteKey(SSLSocket connection, String[] args) {
+		node.deleteKey(new BigInteger(args[1]), new BigInteger(args[2]));
+
+		try {
+			DataOutputStream out = new DataOutputStream(connection.getOutputStream());
+
+			out.writeBytes("OK\n");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public void deleteChunk(SSLSocket connection, String[] args) {
+		node.deleteChunk(new BigInteger(args[1]), new BigInteger(args[2]));
+
+		try {
+			DataOutputStream out = new DataOutputStream(connection.getOutputStream());
+
+			out.writeBytes("OK\n");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
 	public void interpretMessage(SSLSocket connection) throws IOException {
 		BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 
@@ -123,6 +176,18 @@ public class NodeThread implements Runnable {
 			break;
 		case "GIVEKEYS":
 			giveKeys(connection, args);
+			break;
+		case "STOREKEY":
+			storeKey(connection, args);
+			break;
+		case "GETKEY":
+			getKey(connection, args);
+			break;
+		case "DELETEKEY":
+			deleteKey(connection, args);
+			break;
+		case "DELETECHUNK":
+			deleteChunk(connection, args);
 			break;
 		case "BACKUP":
 			node.executor.execute(new ChunkReceiverThread(node, connection));

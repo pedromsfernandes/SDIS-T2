@@ -56,7 +56,7 @@ class ClientRequestListenerThread implements Runnable {
                 }
 
                 System.out.println(response);
-                out.writeUTF("oioioi");
+                out.writeUTF(response);
 
                 in.close();
                 out.close();
