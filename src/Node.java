@@ -3,6 +3,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,7 +19,7 @@ public class Node extends ExternalNode {
 	ConcurrentHashMap<BigInteger, String> keys;
 	Storage storage;
 
-	Node(String ip,int port) throws UnknownHostException {
+	Node(String ip, int port) throws UnknownHostException {
 		super(ip, port);
 
 		keys = new ConcurrentHashMap<>();
@@ -28,7 +29,7 @@ public class Node extends ExternalNode {
 		this.successor = this;
 
 		fingerTable = new ExternalNode[160];
-		for(int i = 0; i < fingerTable.length; i++)
+		for (int i = 0; i < fingerTable.length; i++)
 			fingerTable[i] = this;
 
 		executor = Executors.newScheduledThreadPool(100);
@@ -40,28 +41,28 @@ public class Node extends ExternalNode {
 		this.predecessor = null;
 		this.successor = ringNode.findSuccessor(this.id, this.id);
 
-		for(int i = 0; i < fingerTable.length; i++)
+		for (int i = 0; i < fingerTable.length; i++)
 			fingerTable[i] = this.successor;
 	}
 
 	public static boolean idBetween(BigInteger id, BigInteger lhs, BigInteger rhs) {
-		if(lhs.compareTo(rhs) > 0)
+		if (lhs.compareTo(rhs) > 0)
 			return (id.compareTo(lhs) >= 0) || (id.compareTo(rhs) <= 0);
-		
+
 		return (id.compareTo(lhs) >= 0) && (id.compareTo(rhs) <= 0);
 	}
 
 	public ExternalNode findSuccessor(BigInteger requestId, BigInteger id) {
-		if(id.equals(this.id))
+		if (id.equals(this.id))
 			return this;
 
-		if(idBetween(id, this.id, this.successor.id))
+		if (idBetween(id, this.id, this.successor.id))
 			return this.successor;
 
 		else {
 			ExternalNode n0 = closestPrecedingNode(id);
 
-			if(n0.id.equals(this.id))
+			if (n0.id.equals(this.id))
 				return this;
 
 			return n0.findSuccessor(this.id, id);
@@ -69,8 +70,8 @@ public class Node extends ExternalNode {
 	}
 
 	public ExternalNode closestPrecedingNode(BigInteger id) {
-		for(int i = fingerTable.length - 1; i >= 0; i++)
-			if(fingerTable[i] != null && idBetween(fingerTable[i].id, this.id, id))
+		for (int i = fingerTable.length - 1; i >= 0; i++)
+			if (fingerTable[i] != null && idBetween(fingerTable[i].id, this.id, id))
 				return fingerTable[i];
 
 		return this;
@@ -80,30 +81,30 @@ public class Node extends ExternalNode {
 		return this.predecessor;
 	}
 
-	public HashMap<BigInteger,String> computeKeys(BigInteger otherId) {
-		HashMap<BigInteger,String> keysToGive = new HashMap<>();
+	public HashMap<BigInteger, String> computeKeys(BigInteger otherId) {
+		HashMap<BigInteger, String> keysToGive = new HashMap<>();
 
 		Enumeration<BigInteger> mapKeys = keys.keys();
 
-		while(mapKeys.hasMoreElements()) {
+		while (mapKeys.hasMoreElements()) {
 			BigInteger i = mapKeys.nextElement();
 
-			if(i.compareTo(otherId) < 0)
-			{
+			if (i.compareTo(otherId) < 0) {
 				keysToGive.put(i, keys.get(i));
 				keys.remove(i);
-			} 
+			}
 		}
 
 		return keysToGive;
 	}
 
 	public void notify(BigInteger requestId, ExternalNode other) {
-		if(this.predecessor == null || !this.predecessor.id.equals(this.id) || idBetween(other.id, this.predecessor.id, this.id)) {			
-			if(other.id.equals(this.id))
+		if (this.predecessor == null || !this.predecessor.id.equals(this.id)
+				|| idBetween(other.id, this.predecessor.id, this.id)) {
+			if (other.id.equals(this.id))
 				return;
 
-			if(this.predecessor == null || !other.id.equals(this.predecessor.id)) {
+			if (this.predecessor == null || !other.id.equals(this.predecessor.id)) {
 				this.predecessor = other;
 				this.predecessor.giveKeys(this, computeKeys(other.id));
 			}
@@ -113,7 +114,8 @@ public class Node extends ExternalNode {
 	public void stabilize() {
 		ExternalNode x = this.successor.getPredecessor(this.id);
 
-		if(x != null && !this.id.equals(x.id) && (this.id.equals(this.successor.id) || idBetween(x.id, this.id, successor.id))) {
+		if (x != null && !this.id.equals(x.id)
+				&& (this.id.equals(this.successor.id) || idBetween(x.id, this.id, successor.id))) {
 			this.successor = x;
 			fingerTable[0] = x;
 		}
@@ -122,8 +124,9 @@ public class Node extends ExternalNode {
 	}
 
 	public void fixFingers() {
-		for(int i = 1; i < fingerTable.length; i++) {
-			BigInteger fingerID = (this.id.add(new BigInteger("2").pow(i))).mod(new BigInteger("2").pow(fingerTable.length));
+		for (int i = 1; i < fingerTable.length; i++) {
+			BigInteger fingerID = (this.id.add(new BigInteger("2").pow(i)))
+					.mod(new BigInteger("2").pow(fingerTable.length));
 			fingerTable[i] = findSuccessor(this.id, fingerID);
 		}
 	}
@@ -133,7 +136,7 @@ public class Node extends ExternalNode {
 	}
 
 	public void checkPredecessor() {
-		if(this.predecessor != null && this.predecessor.failed(this.id))
+		if (this.predecessor != null && this.predecessor.failed(this.id))
 			this.predecessor = null;
 	}
 
@@ -157,7 +160,7 @@ public class Node extends ExternalNode {
 	public String backup(DataOutputStream out, DataInputStream in) throws IOException {
 		int chunks = in.readInt();
 
-		for(int i = 0; i < chunks; i++){
+		for (int i = 0; i < chunks; i++) {
 			int length = in.readInt();
 			byte[] message = new byte[length];
 			in.readFully(message, 0, message.length); // read the message
@@ -165,29 +168,28 @@ public class Node extends ExternalNode {
 			String[] header = Utils.getHeader(message);
 			byte[] content = Utils.getChunkContent(message, length);
 
-			if(i == 0) {
+			if (i == 0) {
 				String key = header[1];
 				BigInteger encrypted = Utils.getSHA1(key);
 
 				ExternalNode successor = this.findSuccessor(this.id, encrypted);
 
-				if(successor.id == this.id) {
+				if (successor.id == this.id) {
 					this.storeKey(this.id, encrypted, chunks + ":" + header[3]);
 				} else {
 					successor.storeKey(this.id, encrypted, chunks + ":" + header[3]);
 				}
 			}
 
-			for(int j = 0; j < Integer.parseInt(header[3]); j++){
+			for (int j = 0; j < Integer.parseInt(header[3]); j++) {
 				String key = header[1] + "-" + header[2] + "-" + j;
 				BigInteger encrypted = Utils.getSHA1(key);
 
 				ExternalNode successor = this.findSuccessor(this.id, encrypted);
-				
-				if(successor.id == this.id){
+
+				if (successor.id == this.id) {
 					storeChunk(encrypted, key, content);
-				}
-				else{
+				} else {
 					executor.execute(new ChunkSenderThread(this, successor, encrypted, key, content));
 				}
 
@@ -205,24 +207,44 @@ public class Node extends ExternalNode {
 
 		String value;
 
-		if(successor.id == this.id){
+		if (successor.id == this.id) {
 			value = this.getKey(this.id, encrypted);
-		}
-		else {
+		} else {
 			value = successor.getKey(this.id, encrypted);
 		}
 
-		//PEDIR CHUNKS, E MANDAR DE VOLTA PARA O TESTAPP
+		// PEDIR CHUNKS, E MANDAR DE VOLTA PARA O TESTAPP
 
-		// String[] args = value.split(":",2);
-		// int chunks = Integer.parseInt(args[0]);
+		String[] args = value.split(":", 2);
+		int numChunks = Integer.parseInt(args[0]);
+		ArrayList<String> keys = new ArrayList<String>();
+		storage.addFileToRestore(fileName, numChunks);
 
-		// for(int i = 0; i < chunks; i++) {
-		// 	String key = fileName + "-" + i + "-0";
-		// 	BigInteger chunkID = Utils.getSHA1(key);
+		for (int i = 0; i < numChunks; i++) {
+			String key = fileName + "-" + i + "-0";
+			BigInteger chunkID = Utils.getSHA1(key);
+			keys.add(chunkID.toString());
+			successor = this.findSuccessor(this.id, chunkID);
 
-		// 	ExternalNode successor = this.findSuccessor(this.id, encrypted);
-		// }
+			executor.execute(new ChunkRequestThread(this, successor, chunkID, fileName));
+		}
+
+		while (storage.getFileCount(fileName) != 0) {
+			try {
+				Thread.sleep(500);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
+		ArrayList<byte[]> chunks = storage.getChunks(keys);
+		storage.freeRestoredChunks(keys, fileName);
+		out.writeInt(numChunks);
+		for(byte[] chunk : chunks){
+			out.writeInt(chunk.length);
+			out.write(chunk);
+		}
 
 
 		return "RESTORED";

@@ -16,8 +16,7 @@ public class NodeThread implements Runnable {
 	}
 
 	public void findSuccessor(SSLSocket connection, String[] args) {
-		ExternalNode successor = node.findSuccessor(new BigInteger(args[1]),
-				new BigInteger(args[2]));
+		ExternalNode successor = node.findSuccessor(new BigInteger(args[1]), new BigInteger(args[2]));
 
 		String response = "SUCCESSOR " + node.id + " ";
 
@@ -169,6 +168,9 @@ public class NodeThread implements Runnable {
 			break;
 		case "BACKUP":
 			node.executor.execute(new ChunkReceiverThread(node, connection));
+			break;
+		case "RESTORE":
+			node.executor.execute(new ChunkRequestListenerThread(node, connection));
 			break;
 		}
 	}

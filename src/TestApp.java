@@ -2,6 +2,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -106,24 +107,65 @@ class TestApp {
 
         for (int i = 0; i < chunks.size(); i++) {
             byte[] message = buildBackupMessage(fileName, i, replicationDegree, chunks.get(i));
-			out.writeInt(message.length);
+            out.writeInt(message.length);
             out.write(message);
             out.flush();
         }
+    }
 
-        System.out.println(in.readUTF());
+    private static void restoreFile(ArrayList<byte[]> chunks, String fileName) {
+        int chunkSize = 64 * 1000; // 64KByte
+
+        FileOutputStream out = null;
+        try {
+            out = new FileOutputStream(fileName);
+        } catch (FileNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        FileChannel fout = out.getChannel();
+        ByteBuffer byteBuffer = ByteBuffer.allocate(chunkSize);
+
+        try {
+
+            for (byte[] chunk : chunks) {
+                byteBuffer.clear();
+                byteBuffer.put(chunk);
+                byteBuffer.flip();
+                fout.write(byteBuffer);
+            }
+
+            fout.close();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     private static void restore(String fileName, DataOutputStream out, DataInputStream in) throws IOException {
-		out.writeUTF("RESTORE");
-		out.writeUTF(fileName);
-		System.out.println(in.readUTF());
+        out.writeUTF("RESTORE");
+        out.writeUTF(fileName);
+
+        ArrayList<byte[]> chunks = new ArrayList<byte[]>();
+
+        int numChunks = in.readInt();
+
+        for (int i = 0; i < numChunks; i++) {
+            int length = in.readInt(); // read length of incoming message
+            if (length > 0) {
+                byte[] chunk = new byte[length];
+                in.readFully(chunk, 0, chunk.length); // read the message
+                chunks.add(chunk);
+            }
+        }
+
+        restoreFile(chunks, fileName);
     }
 
     private static void delete(String fileName, DataOutputStream out, DataInputStream in) throws IOException {
-		out.writeUTF("DELETE");
-		out.writeUTF(fileName);
-		System.out.println(in.readUTF());
+        out.writeUTF("DELETE");
+        out.writeUTF(fileName);
+        System.out.println(in.readUTF());
     }
 
     public static void main(String[] args) throws IOException {
@@ -154,6 +196,8 @@ class TestApp {
         default:
             break;
         }
+
+        System.out.println(in.readUTF());
 
         in.close();
         out.close();

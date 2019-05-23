@@ -155,7 +155,7 @@ public class ExternalNode {
 			BigInteger i = it.next();
 
 			if(keys.get(i).contains("-")) {
-				byte[] content = node.storage.getChunkContent(i);
+				byte[] content = node.storage.readChunk(i);
 				node.executor.execute(new ChunkSenderThread(node, this, i, keys.get(i), content));
 			} else {
 				class SendKey implements Runnable {

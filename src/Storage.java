@@ -9,15 +9,51 @@ import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 class Storage {
 
     private ConcurrentHashMap<String, byte[]> restoredChunks;
+    private ConcurrentHashMap<String, AtomicInteger> restoredChunksCount;
+
     private String chunksPath;
 
     public Storage(String nodeId) {
         chunksPath = "chunks-" + nodeId;
         new File(chunksPath).mkdirs();
+        restoredChunks = new ConcurrentHashMap<String, byte[]>();
+        restoredChunksCount = new ConcurrentHashMap<String, AtomicInteger>();
+    }
+
+    public int getFileCount(String file){
+        return restoredChunksCount.get(file).get();
+    }
+
+    public ArrayList<byte[]> getChunks(ArrayList<String> keys){
+        ArrayList<byte[]> chunks = new ArrayList<byte[]>();
+
+        for(String key : keys){
+            chunks.add(restoredChunks.get(key));
+        }
+
+        return chunks;
+    }
+
+    public void addRestoredChunk(String key, String file, byte[] content){
+        restoredChunks.put(key, content);
+        restoredChunksCount.replace(file, new AtomicInteger(restoredChunksCount.get(file).decrementAndGet()));
+    }
+
+    public void addFileToRestore(String file, int numChunks){
+        restoredChunksCount.put(file, new AtomicInteger(numChunks));
+    }
+
+    public void freeRestoredChunks(ArrayList<String> keys, String file){
+        restoredChunksCount.remove(file);
+
+        for(String key : keys){
+            restoredChunks.remove(key);
+        }
     }
 
     public void restoreFile(String fileId, String fileName) throws IOException {
