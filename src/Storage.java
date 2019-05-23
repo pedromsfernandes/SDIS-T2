@@ -1,4 +1,6 @@
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -53,33 +55,66 @@ class Storage {
 
     public void storeChunk(BigInteger key, byte[] chunk) {
         String path = chunksPath + "/" + key.toString() + ".chunk";
-        
+
         try {
 
             FileOutputStream fout = new FileOutputStream(path);
             FileChannel fcout = fout.getChannel();
-    
+
             ByteBuffer buffer = ByteBuffer.allocate(64 * 1000);
-    
+
             buffer.clear();
             buffer.put(chunk);
             buffer.flip();
             fcout.write(buffer);
-    
+
             fout.close();
-        }
-        catch(IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
-	}
-	
-	public void delete(BigInteger key) {
-		String path = chunksPath + "/" + key.toString() + ".chunk";
-		new File(path).delete();
-	}
+    }
 
-	public byte[] getChunkContent(BigInteger key) {
-		return Utils.splitFile(chunksPath + "/" + key.toString() + ".chunk").get(0);		
-	}
+    public byte[] readChunk(BigInteger key) {
+        int chunkSize = 64 * 1000;
+        byte[] chunk = new byte[chunkSize];
+        String path = chunksPath + "/" + key.toString() + ".chunk";
+
+        FileInputStream fin = null;
+        try {
+            fin = new FileInputStream(path);
+        } catch (FileNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        FileChannel fc = fin.getChannel();
+        ByteBuffer byteBuffer = ByteBuffer.allocate(chunkSize);
+        int bytesAmount = 0;
+
+        try {
+            bytesAmount = fc.read(byteBuffer);
+            chunk = new byte[bytesAmount];
+
+            byteBuffer.flip();
+            byteBuffer.get(chunk);
+            byteBuffer.clear();
+
+            fin.close();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return chunk;
+
+    }
+
+    public void delete(BigInteger key) {
+        String path = chunksPath + "/" + key.toString() + ".chunk";
+        new File(path).delete();
+    }
+
+    public byte[] getChunkContent(BigInteger key) {
+        return Utils.splitFile(chunksPath + "/" + key.toString() + ".chunk").get(0);
+    }
 }
