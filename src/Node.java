@@ -31,7 +31,7 @@ public class Node extends ExternalNode {
 		for(int i = 0; i < fingerTable.length; i++)
 			fingerTable[i] = this;
 
-		executor = Executors.newScheduledThreadPool(25);
+		executor = Executors.newScheduledThreadPool(100);
 		executor.execute(new NodeThread(this));
 		executor.scheduleAtFixedRate(new StabilizeThread(this), 15, 15, TimeUnit.SECONDS);
 	}
@@ -103,9 +103,10 @@ public class Node extends ExternalNode {
 			if(other.id.equals(this.id))
 				return;
 
-			this.predecessor = other;
-
-			this.predecessor.giveKeys(this.id, computeKeys(other.id));
+			if(this.predecessor == null || !other.id.equals(this.predecessor.id)) {
+				this.predecessor = other;
+				this.predecessor.giveKeys(this, computeKeys(other.id));
+			}
 		}
 	}
 

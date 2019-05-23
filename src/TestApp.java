@@ -88,42 +88,6 @@ class TestApp {
         return Utils.getSHA(fileName + "-" + dateModified + "-" + owner);
     }
 
-    private static ArrayList<byte[]> splitFile(String fileName) {
-
-        int chunkSize = 64 * 1000; // 64KByte
-        ArrayList<byte[]> chunks = new ArrayList<byte[]>();
-
-        FileInputStream fin = null;
-        try {
-            fin = new FileInputStream(fileName);
-        } catch (FileNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        FileChannel fc = fin.getChannel();
-        ByteBuffer byteBuffer = ByteBuffer.allocate(chunkSize);
-        int bytesAmount = 0;
-
-        try {
-            while ((bytesAmount = fc.read(byteBuffer)) > 0) {
-                byte[] smaller = new byte[bytesAmount];
-
-                byteBuffer.flip();
-                byteBuffer.get(smaller);
-                byteBuffer.clear();
-
-                chunks.add(smaller);
-            }
-
-            fin.close();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
-        return chunks;
-    }
-
     public static byte[] buildBackupMessage(String fileName, int chunkNo, int replicationDegree, byte[] chunkContent) {
 
         String header = "BACKUP " + fileName + " " + chunkNo + " " + replicationDegree + " \r\n\r\n";
@@ -135,7 +99,7 @@ class TestApp {
     private static void backup(String fileName, int replicationDegree, DataOutputStream out, DataInputStream in)
             throws IOException {
 
-        ArrayList<byte[]> chunks = splitFile(fileName);
+        ArrayList<byte[]> chunks = Utils.splitFile(fileName);
 
         out.writeUTF("BACKUP");
         out.writeInt(chunks.size());

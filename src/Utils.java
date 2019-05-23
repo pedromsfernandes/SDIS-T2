@@ -1,7 +1,13 @@
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Random;
 
 public class Utils {
@@ -121,5 +127,41 @@ public class Utils {
             hexChars[j * 2 + 1] = hexArray[v & 0x0F];
         }
         return hexChars;
+	}
+	
+	public static ArrayList<byte[]> splitFile(String fileName) {
+
+        int chunkSize = 64 * 1000; // 64KByte
+        ArrayList<byte[]> chunks = new ArrayList<byte[]>();
+
+        FileInputStream fin = null;
+        try {
+            fin = new FileInputStream(fileName);
+        } catch (FileNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        FileChannel fc = fin.getChannel();
+        ByteBuffer byteBuffer = ByteBuffer.allocate(chunkSize);
+        int bytesAmount = 0;
+
+        try {
+            while ((bytesAmount = fc.read(byteBuffer)) > 0) {
+                byte[] smaller = new byte[bytesAmount];
+
+                byteBuffer.flip();
+                byteBuffer.get(smaller);
+                byteBuffer.clear();
+
+                chunks.add(smaller);
+            }
+
+            fin.close();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return chunks;
     }
 }

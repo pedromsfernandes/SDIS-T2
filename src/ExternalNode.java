@@ -145,36 +145,41 @@ public class ExternalNode {
 		return true;
 	}
 
-	public void giveKeys(BigInteger requestId, HashMap<BigInteger, String> keys) {
+	public void giveKeys(Node node, HashMap<BigInteger, String> keys) {
 		if (keys.size() == 0)
 			return;
 
-		try {
-			SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-			SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
+		Iterator<BigInteger> it = keys.keySet().iterator();
 
-			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+		while (it.hasNext()) {
+			BigInteger i = it.next();
 
-			String message = "GIVEKEYS " + requestId + " " + keys.size() + " \n";
-			System.out.println("[Node " + requestId + "] " + message);
+			if(keys.get(i).contains("-")) {
+				byte[] content = node.storage.getChunkContent(i);
+				node.executor.execute(new ChunkSenderThread(node, this, i, keys.get(i), content));
+			} else {
+				class SendKey implements Runnable {
+					BigInteger senderId;
+					ExternalNode receiver;
+					BigInteger key;
+					String value;
 
-			Iterator<BigInteger> it = keys.keySet().iterator();
+					SendKey(BigInteger senderId, ExternalNode receiver, BigInteger key, String value) {
+						this.senderId = senderId;
+						this.receiver = receiver;
+						this.key = key;
+						this.value = value;
+					}
 
-			while (it.hasNext()) {
-				BigInteger i = it.next();
-				message += i + " " + keys.get(i) + "\n";
+					public void run() {
+						receiver.storeKey(senderId, key, value);
+					}
+					
+				}
+				node.executor.execute(new SendKey(node.id,this,i,keys.get(i)));
 			}
 
-			out.writeBytes(message);
-			in.readLine();
-			socket.close();
-		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+
 		}
 	}
 

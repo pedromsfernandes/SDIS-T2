@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -76,5 +77,9 @@ class Storage {
 	public void delete(BigInteger key) {
 		String path = chunksPath + "/" + key.toString() + ".chunk";
 		new File(path).delete();
+	}
+
+	public byte[] getChunkContent(BigInteger key) {
+		return Utils.splitFile(chunksPath + "/" + key.toString() + ".chunk").get(0);		
 	}
 }
