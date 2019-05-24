@@ -7,18 +7,20 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
 class ChunkSenderThread implements Runnable {
-
+    private Node peer;
     private DataOutputStream dos;
     private DataInputStream dis;
     private BigInteger key;
     private String value;
     private byte[] content;
+    private boolean deleteAfter;
     
-    public ChunkSenderThread(Node peer, ExternalNode successor, BigInteger key, String value, byte[] content){
-
+    public ChunkSenderThread(Node peer, ExternalNode successor, BigInteger key, String value, byte[] content, boolean deleteAfter){
+        this.peer = peer;
         this.key = key;
         this.content = content;
         this.value = value;
+        this.deleteAfter = deleteAfter;
 
         SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
         try {
@@ -40,6 +42,8 @@ class ChunkSenderThread implements Runnable {
             dos.writeInt(content.length);
             dos.write(content);
             dos.flush();
+            if(this.deleteAfter)
+                peer.deleteChunk(peer.id, key);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

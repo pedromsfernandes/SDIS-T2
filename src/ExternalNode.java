@@ -3,6 +3,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.math.BigInteger;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -123,6 +124,7 @@ public class ExternalNode {
 		try {
 			SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
 			SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
+			socket.setSoTimeout(1000);
 
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -134,6 +136,8 @@ public class ExternalNode {
 			socket.close();
 
 			return false;
+		} catch (SocketTimeoutException e) {
+			return true;
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -156,30 +160,29 @@ public class ExternalNode {
 
 			if(keys.get(i).contains("-")) {
 				byte[] content = node.storage.readChunk(i);
-				node.executor.execute(new ChunkSenderThread(node, this, i, keys.get(i), content));
+				node.executor.execute(new ChunkSenderThread(node, this, i, keys.get(i), content, true));
 			} else {
 				class SendKey implements Runnable {
-					BigInteger senderId;
+					Node sender;
 					ExternalNode receiver;
 					BigInteger key;
 					String value;
 
-					SendKey(BigInteger senderId, ExternalNode receiver, BigInteger key, String value) {
-						this.senderId = senderId;
+					SendKey(Node sender, ExternalNode receiver, BigInteger key, String value) {
+						this.sender = sender;
 						this.receiver = receiver;
 						this.key = key;
 						this.value = value;
 					}
 
-					public void run() {
-						receiver.storeKey(senderId, key, value);
+					public void run(){
+						receiver.storeKey(sender.id, key, value);
+						sender.deleteKey(sender.id, key);
 					}
 					
 				}
-				node.executor.execute(new SendKey(node.id,this,i,keys.get(i)));
+				node.executor.execute(new SendKey(node,this,i,keys.get(i)));
 			}
-
-
 		}
 	}
 

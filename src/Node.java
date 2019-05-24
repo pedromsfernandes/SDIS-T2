@@ -89,7 +89,7 @@ public class Node extends ExternalNode {
 		while (mapKeys.hasMoreElements()) {
 			BigInteger i = mapKeys.nextElement();
 
-			if (i.compareTo(otherId) < 0) {
+			if (idBetween(i, this.id, otherId)) {
 				keysToGive.put(i, keys.get(i));
 				keys.remove(i);
 			}
@@ -190,7 +190,7 @@ public class Node extends ExternalNode {
 				if (successor.id == this.id) {
 					storeChunk(encrypted, key, content);
 				} else {
-					executor.execute(new ChunkSenderThread(this, successor, encrypted, key, content));
+					executor.execute(new ChunkSenderThread(this, successor, encrypted, key, content, false));
 				}
 
 			}
