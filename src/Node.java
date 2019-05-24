@@ -1,8 +1,15 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.math.BigInteger;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -22,6 +29,8 @@ public class Node extends ExternalNode {
 	Node(String ip, int port) throws UnknownHostException {
 		super(ip, port);
 
+		loadKeys();
+
 		keys = new ConcurrentHashMap<>();
 		storage = new Storage(id.toString());
 
@@ -35,6 +44,41 @@ public class Node extends ExternalNode {
 		executor = Executors.newScheduledThreadPool(100);
 		executor.execute(new NodeThread(this));
 		executor.scheduleAtFixedRate(new StabilizeThread(this), 15, 15, TimeUnit.SECONDS);
+	}
+
+	public void loadKeys() {
+		File file = new File(this.id + ".ser");
+
+		if(!file.exists())
+			return;
+
+		try {
+			FileInputStream f = new FileInputStream(file);
+			ObjectInputStream o = new ObjectInputStream(f);
+
+			this.keys = (ConcurrentHashMap<BigInteger, String>) o.readObject(); 
+
+			o.close();
+			f.close();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public void saveKeys() {
+		try {
+			FileOutputStream f = new FileOutputStream(new File(this.id + ".ser"));
+			ObjectOutputStream o = new ObjectOutputStream(f);
+
+			o.writeObject(keys);
+
+			o.close();
+			f.close();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public void join(ExternalNode ringNode) throws UnknownHostException, IOException {
@@ -59,14 +103,12 @@ public class Node extends ExternalNode {
 		if (idBetween(id, this.id, this.successor.id))
 			return this.successor;
 
-		else {
-			ExternalNode n0 = closestPrecedingNode(id);
+		ExternalNode n0 = closestPrecedingNode(id);
 
-			if (n0.id.equals(this.id))
-				return this;
+		if (n0.id.equals(this.id))
+			return this;
 
-			return n0.findSuccessor(this.id, id);
-		}
+		return n0.findSuccessor(this.id, id);
 	}
 
 	public ExternalNode closestPrecedingNode(BigInteger id) {
@@ -92,6 +134,7 @@ public class Node extends ExternalNode {
 			if (idBetween(i, this.id, otherId)) {
 				keysToGive.put(i, keys.get(i));
 				keys.remove(i);
+				saveKeys();
 			}
 		}
 
@@ -142,6 +185,7 @@ public class Node extends ExternalNode {
 
 	public void storeKey(BigInteger requestId, BigInteger encrypted, String value) {
 		keys.put(encrypted, value);
+		saveKeys();
 	}
 
 	public String getKey(BigInteger requestId, BigInteger encrypted) {
@@ -150,10 +194,12 @@ public class Node extends ExternalNode {
 
 	public void deleteKey(BigInteger requestId, BigInteger encrypted) {
 		keys.remove(encrypted);
+		saveKeys();
 	}
 
 	public void deleteChunk(BigInteger requestId, BigInteger encrypted) {
 		keys.remove(encrypted);
+		saveKeys();
 		storage.delete(encrypted);
 	}
 
@@ -202,7 +248,6 @@ public class Node extends ExternalNode {
 	public String restore(DataOutputStream out, DataInputStream in) throws IOException {
 		String fileName = in.readUTF();
 		BigInteger encrypted = Utils.getSHA1(fileName);
-
 		ExternalNode successor = this.findSuccessor(this.id, encrypted);
 
 		String value;
@@ -213,10 +258,9 @@ public class Node extends ExternalNode {
 			value = successor.getKey(this.id, encrypted);
 		}
 
-		// PEDIR CHUNKS, E MANDAR DE VOLTA PARA O TESTAPP
-
 		String[] args = value.split(":", 2);
 		int numChunks = Integer.parseInt(args[0]);
+
 		ArrayList<String> keys = new ArrayList<String>();
 		storage.addFileToRestore(fileName, numChunks);
 
@@ -226,7 +270,11 @@ public class Node extends ExternalNode {
 			keys.add(chunkID.toString());
 			successor = this.findSuccessor(this.id, chunkID);
 
-			executor.execute(new ChunkRequestThread(this, successor, chunkID, fileName));
+			if (successor.id == this.id) {
+				storage.addRestoredChunk(chunkID.toString(), fileName, storage.readChunk(chunkID));
+			} else {
+				executor.execute(new ChunkRequestThread(this, successor, chunkID, fileName));
+			}
 		}
 
 		while (storage.getFileCount(fileName) != 0) {
@@ -241,11 +289,10 @@ public class Node extends ExternalNode {
 		ArrayList<byte[]> chunks = storage.getChunks(keys);
 		storage.freeRestoredChunks(keys, fileName);
 		out.writeInt(numChunks);
-		for(byte[] chunk : chunks){
+		for (byte[] chunk : chunks) {
 			out.writeInt(chunk.length);
 			out.write(chunk);
 		}
-
 
 		return "RESTORED";
 	}
@@ -258,37 +305,34 @@ public class Node extends ExternalNode {
 
 		String value;
 
-		if(successor.id == this.id){
+		if (successor.id == this.id) {
 			value = this.getKey(this.id, encrypted);
-		}
-		else {
+		} else {
 			value = successor.getKey(this.id, encrypted);
 		}
 
-		String[] args = value.split(":",2);
+		String[] args = value.split(":", 2);
 		int chunks = Integer.parseInt(args[0]);
 		int repDegree = Integer.parseInt(args[1]);
 
-		for(int i = 0; i < chunks; i++){
-			for(int j = 0; j < repDegree; j++){
+		for (int i = 0; i < chunks; i++) {
+			for (int j = 0; j < repDegree; j++) {
 				String key = fileName + "-" + i + "-" + j;
 				BigInteger chunkID = Utils.getSHA1(key);
 
 				ExternalNode chunkSuccessor = this.findSuccessor(this.id, encrypted);
-				
-				if(successor.id == this.id) {
+
+				if (successor.id == this.id) {
 					deleteChunk(this.id, chunkID);
-				}
-				else {
+				} else {
 					chunkSuccessor.deleteChunk(this.id, chunkID);
 				}
 			}
 		}
 
-		if(successor.id == this.id){
+		if (successor.id == this.id) {
 			this.deleteKey(this.id, encrypted);
-		}
-		else {
+		} else {
 			successor.deleteKey(this.id, encrypted);
 		}
 
@@ -296,11 +340,11 @@ public class Node extends ExternalNode {
 	}
 
 	public static void main(String[] args) throws IOException {
-		Node node = new Node(args[0],Integer.parseInt(args[1]));
+		Node node = new Node(args[0], Integer.parseInt(args[1]));
 		node.executor.execute(new ClientRequestListenerThread(node));
 
-		if(args.length == 4)
-			node.join(new ExternalNode(args[2],Integer.parseInt(args[3])));
+		if (args.length == 4)
+			node.join(new ExternalNode(args[2], Integer.parseInt(args[3])));
 	}
 
 	public Storage getStorage() {
@@ -313,6 +357,7 @@ public class Node extends ExternalNode {
 
 	public void storeChunk(BigInteger key, String value, byte[] chunk) {
 		this.keys.put(key, value);
+		saveKeys();
 		this.storage.storeChunk(key, chunk);
 	}
 }
