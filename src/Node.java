@@ -274,6 +274,7 @@ public class Node extends ExternalNode {
 				storage.addRestoredChunk(chunkID.toString(), fileName, storage.readChunk(chunkID));
 			} else {
 				executor.execute(new ChunkRequestThread(this, successor, chunkID, fileName));
+				executor.schedule(new CheckChunkReceiveThread(this, successor, key, keys, fileName), 5, TimeUnit.SECONDS);
 			}
 		}
 
