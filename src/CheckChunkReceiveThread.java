@@ -23,12 +23,18 @@ class CheckChunkReceiveThread implements Runnable {
             int index = key.indexOf("-");
             String begin = key.substring(0, index + 1);
             int repDegree = Integer.parseInt(key.substring(index + 1)) + 1;
+            int actualRepDegree = Integer.parseInt(node.getKey(this.node.id, Utils.getSHA1(fileName)).split(":")[1]);
+
+            if(actualRepDegree <= repDegree){
+                return;
+            }
+
             key = begin + repDegree;
             
 			BigInteger chunkID = Utils.getSHA1(key);
 			keys.add(chunkID.toString());
 			successor = this.node.findSuccessor(this.node.id, chunkID);
-
+            
             if (successor.id == this.node.id) {
 				node.storage.addRestoredChunk(chunkID.toString(), fileName, node.storage.readChunk(chunkID));
 			} else {
