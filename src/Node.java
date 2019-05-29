@@ -49,14 +49,14 @@ public class Node extends ExternalNode {
 	public void loadKeys() {
 		File file = new File(this.id + ".ser");
 
-		if(!file.exists())
+		if (!file.exists())
 			return;
 
 		try {
 			FileInputStream f = new FileInputStream(file);
 			ObjectInputStream o = new ObjectInputStream(f);
 
-			this.keys = (ConcurrentHashMap<BigInteger, String>) o.readObject(); 
+			this.keys = (ConcurrentHashMap<BigInteger, String>) o.readObject();
 
 			o.close();
 			f.close();
@@ -274,7 +274,8 @@ public class Node extends ExternalNode {
 				storage.addRestoredChunk(chunkID.toString(), fileName, storage.readChunk(chunkID));
 			} else {
 				executor.execute(new ChunkRequestThread(this, successor, chunkID, fileName));
-				executor.schedule(new CheckChunkReceiveThread(this, successor, key, keys, fileName), 5, TimeUnit.SECONDS);
+				executor.schedule(new CheckChunkReceiveThread(this, successor, key, keys, fileName), 5,
+						TimeUnit.SECONDS);
 			}
 		}
 
@@ -360,5 +361,40 @@ public class Node extends ExternalNode {
 		this.keys.put(key, value);
 		saveKeys();
 		this.storage.storeChunk(key, chunk);
+	}
+
+	public String reclaim(DataOutputStream out, DataInputStream in) throws IOException {
+
+		int spaceToReclaim = getUsedSpace() - in.readInt();
+
+		File chunks = new File("chunks-" + id);
+
+		for (File file : chunks.listFiles()) {
+			String fileName = file.getName();
+			BigInteger key = Utils.getSHA1(fileName);
+			long fileSize = file.length();
+
+			if (spaceToReclaim <= 0)
+				break;
+
+			// Falta ver a cena do desiredRepDegree vs actualRepDegree
+
+			deleteChunk(this.id, key);
+			spaceToReclaim -= fileSize;
+		}
+
+		return null;
+	}
+
+	int getUsedSpace() {
+		File chunks = new File("chunks-" + id);
+		int size = 0;
+
+		for (File file : chunks.listFiles()) {
+			size += file.length();
+		}
+
+		return size;
+
 	}
 }

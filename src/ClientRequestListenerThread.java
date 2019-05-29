@@ -51,6 +51,9 @@ class ClientRequestListenerThread implements Runnable {
                 case "DELETE":
                     response = node.delete(out, in);
                     break;
+                case "RECLAIM":
+                    response = node.reclaim(out, in);
+                    break;
                 default:
                     break;
                 }
