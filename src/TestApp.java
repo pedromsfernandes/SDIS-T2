@@ -38,7 +38,8 @@ class TestApp {
 
         String operation = args[2];
 
-        if (operation.equals("BACKUP")) {
+        switch (operation.toUpperCase()) {
+        case "BACKUP":
             if (args.length != 5) {
                 System.err.println("ERROR: BACKUP takes 2 operands!");
                 printUsage();
@@ -51,19 +52,36 @@ class TestApp {
                 printUsage();
                 return false;
             }
-        } else if (operation.equals("RESTORE")) {
+            break;
+        case "RESTORE":
             if (args.length != 4) {
                 System.err.println("ERROR: RESTORE takes 1 operand!");
                 printUsage();
                 return false;
             }
-        } else if (operation.contains("DELETE")) {
+            break;
+        case "DELETE":
             if (args.length != 4) {
                 System.err.println("ERROR: DELETE takes 1 operand!");
                 printUsage();
                 return false;
             }
-        } else {
+            break;
+        case "RECLAIM":
+            if (args.length != 4) {
+                System.err.println("ERROR: RECLAIM takes 1 operand!");
+                printUsage();
+                return false;
+            }
+            try {
+                Integer.parseInt(args[3]);
+            } catch (Exception e) {
+                System.err.println("ERROR: Could not parse opnd_1!");
+                printUsage();
+                return false;
+            }
+            break;
+        default:
             System.err.println("ERROR: Invalid operation!");
             printUsage();
             return false;
@@ -95,6 +113,12 @@ class TestApp {
         byte[] header_b = header.getBytes(StandardCharsets.US_ASCII);
 
         return Utils.concatenateArrays(header_b, chunkContent);
+    }
+
+    private static void reclaim(int spaceToReclaim, DataOutputStream out, DataInputStream in)
+            throws IOException {
+        out.writeUTF("RECLAIM");
+        out.writeInt(spaceToReclaim);
     }
 
     private static void backup(String fileName, int replicationDegree, DataOutputStream out, DataInputStream in)
@@ -183,7 +207,7 @@ class TestApp {
         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
         DataInputStream in = new DataInputStream(socket.getInputStream());
 
-        switch (operation) {
+        switch (operation.toUpperCase()) {
         case "BACKUP":
             backup(fileName, Integer.parseInt(args[4]), out, in);
             break;
@@ -192,6 +216,9 @@ class TestApp {
             break;
         case "DELETE":
             delete(fileName, out, in);
+            break;
+        case "RECLAIM":
+            reclaim(Integer.parseInt(args[3]), out, in);
             break;
         default:
             break;
