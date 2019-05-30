@@ -112,7 +112,7 @@ public class Node extends ExternalNode {
 	}
 
 	public ExternalNode closestPrecedingNode(BigInteger id) {
-		for (int i = fingerTable.length - 1; i >= 0; i++)
+		for (int i = fingerTable.length - 1; i >= 0; i--)
 			if (fingerTable[i] != null && idBetween(fingerTable[i].id, this.id, id))
 				return fingerTable[i];
 
