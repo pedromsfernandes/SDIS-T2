@@ -370,7 +370,7 @@ public class Node extends ExternalNode {
 
 		for (File file : chunks.listFiles()) {
 			String fileName = file.getName();
-			BigInteger key = Utils.getSHA1(fileName);
+			BigInteger key = new BigInteger(fileName.split("\\.")[0]);
 			long fileSize = file.length();
 
 			if (spaceToReclaim <= 0)
@@ -382,7 +382,7 @@ public class Node extends ExternalNode {
 			spaceToReclaim -= fileSize;
 		}
 
-		return null;
+		return "RECLAIMED";
 	}
 
 	int getUsedSpace() {
