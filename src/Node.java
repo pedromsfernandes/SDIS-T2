@@ -335,10 +335,10 @@ public class Node extends ExternalNode {
 			for (int j = 0; j < repDegree; j++) {
 				String key = fileName + "-" + i + "-" + j;
 				BigInteger chunkID = Utils.getSHA1(key);
-
+				
 				ExternalNode chunkSuccessor = this.findSuccessor(this.id, chunkID);
 
-				if (successor.id.equals(this.id)) {
+				if (chunkSuccessor.id.equals(this.id)) {
 					deleteChunk(this.id, chunkID);
 				} else {
 					chunkSuccessor.deleteChunk(this.id, chunkID);
