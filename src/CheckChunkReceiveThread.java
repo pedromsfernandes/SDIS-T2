@@ -36,7 +36,7 @@ class CheckChunkReceiveThread implements Runnable {
 			keys.add(chunkID.toString());
 			successor = this.node.findSuccessor(this.node.id, chunkID);
             
-            if (successor.id == this.node.id) {
+            if (successor.id.equals(this.node.id)) {
 				node.storage.addRestoredChunk(chunkID.toString(), fileName, node.storage.readChunk(chunkID));
 			} else {
 				node.executor.execute(new ChunkRequestThread(node, successor, chunkID, fileName));

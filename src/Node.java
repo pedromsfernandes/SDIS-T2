@@ -82,11 +82,16 @@ public class Node extends ExternalNode {
 	}
 
 	public void join(ExternalNode ringNode) throws UnknownHostException, IOException {
-		this.predecessor = null;
 		this.successor = ringNode.findSuccessor(this.id, this.id);
+		this.predecessor = this.successor;
 
 		for (int i = 0; i < fingerTable.length; i++)
-			fingerTable[i] = this.successor;
+		{
+			if(idBetween(calculateFinger(i), this.id, this.successor.id))
+				fingerTable[i] = this.successor;
+
+			else fingerTable[i] = this;				
+		}
 	}
 
 	public static boolean idBetween(BigInteger id, BigInteger lhs, BigInteger rhs) {
@@ -106,7 +111,7 @@ public class Node extends ExternalNode {
 		ExternalNode n0 = closestPrecedingNode(id);
 
 		if (n0.id.equals(this.id))
-			return this.successor;
+			return this;
 
 		return n0.findSuccessor(this.id, id);
 	}
@@ -149,7 +154,13 @@ public class Node extends ExternalNode {
 
 			if (this.predecessor == null || !other.id.equals(this.predecessor.id)) {
 				this.predecessor = other;
+
 				this.predecessor.giveKeys(this, computeKeys(other.id));
+
+				if(this.successor.id.equals(this.id)) {
+					this.successor = other;
+					fingerTable[0] = other;
+				}
 			}
 		}
 	}
@@ -166,10 +177,13 @@ public class Node extends ExternalNode {
 		this.successor.notify(this.id, this);
 	}
 
+	private BigInteger calculateFinger(int i) {
+		return ((this.id.add(new BigInteger("2").pow(i))).mod(new BigInteger("2").pow(fingerTable.length)));
+	}
+
 	public void fixFingers() {
 		for (int i = 1; i < fingerTable.length; i++) {
-			BigInteger fingerID = (this.id.add(new BigInteger("2").pow(i)))
-					.mod(new BigInteger("2").pow(fingerTable.length));
+			BigInteger fingerID = calculateFinger(i);
 			fingerTable[i] = findSuccessor(this.id, fingerID);
 		}
 	}
@@ -220,7 +234,7 @@ public class Node extends ExternalNode {
 
 				ExternalNode successor = this.findSuccessor(this.id, encrypted);
 
-				if (successor.id == this.id) {
+				if (successor.id.equals(this.id)) {
 					this.storeKey(this.id, encrypted, chunks + ":" + header[3]);
 				} else {
 					successor.storeKey(this.id, encrypted, chunks + ":" + header[3]);
@@ -233,7 +247,7 @@ public class Node extends ExternalNode {
 
 				ExternalNode successor = this.findSuccessor(this.id, encrypted);
 
-				if (successor.id == this.id) {
+				if (successor.id.equals(this.id)) {
 					storeChunk(encrypted, key, content);
 				} else {
 					executor.execute(new ChunkSenderThread(this, successor, encrypted, key, content, false));
@@ -252,7 +266,7 @@ public class Node extends ExternalNode {
 
 		String value;
 
-		if (successor.id == this.id) {
+		if (successor.id.equals(this.id)) {
 			value = this.getKey(this.id, encrypted);
 		} else {
 			value = successor.getKey(this.id, encrypted);
@@ -270,7 +284,7 @@ public class Node extends ExternalNode {
 			keys.add(chunkID.toString());
 			successor = this.findSuccessor(this.id, chunkID);
 
-			if (successor.id == this.id) {
+			if (successor.id.equals(this.id)) {
 				storage.addRestoredChunk(chunkID.toString(), fileName, storage.readChunk(chunkID));
 			} else {
 				executor.execute(new ChunkRequestThread(this, successor, chunkID, fileName));
@@ -307,7 +321,7 @@ public class Node extends ExternalNode {
 
 		String value;
 
-		if (successor.id == this.id) {
+		if (successor.id.equals(this.id)) {
 			value = this.getKey(this.id, encrypted);
 		} else {
 			value = successor.getKey(this.id, encrypted);
@@ -324,7 +338,7 @@ public class Node extends ExternalNode {
 
 				ExternalNode chunkSuccessor = this.findSuccessor(this.id, chunkID);
 
-				if (successor.id == this.id) {
+				if (successor.id.equals(this.id)) {
 					deleteChunk(this.id, chunkID);
 				} else {
 					chunkSuccessor.deleteChunk(this.id, chunkID);
@@ -332,7 +346,7 @@ public class Node extends ExternalNode {
 			}
 		}
 
-		if (successor.id == this.id) {
+		if (successor.id.equals(this.id)) {
 			this.deleteKey(this.id, encrypted);
 		} else {
 			successor.deleteKey(this.id, encrypted);
