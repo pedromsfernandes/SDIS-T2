@@ -106,7 +106,7 @@ public class Node extends ExternalNode {
 		ExternalNode n0 = closestPrecedingNode(id);
 
 		if (n0.id.equals(this.id))
-			return this;
+			return this.successor;
 
 		return n0.findSuccessor(this.id, id);
 	}
@@ -274,7 +274,7 @@ public class Node extends ExternalNode {
 				storage.addRestoredChunk(chunkID.toString(), fileName, storage.readChunk(chunkID));
 			} else {
 				executor.execute(new ChunkRequestThread(this, successor, chunkID, fileName));
-				executor.schedule(new CheckChunkReceiveThread(this, successor, key, keys, fileName), 5,
+				executor.schedule(new CheckChunkReceiveThread(this, successor, key, keys, fileName, Integer.parseInt(args[1])), 5,
 						TimeUnit.SECONDS);
 			}
 		}
@@ -322,7 +322,7 @@ public class Node extends ExternalNode {
 				String key = fileName + "-" + i + "-" + j;
 				BigInteger chunkID = Utils.getSHA1(key);
 
-				ExternalNode chunkSuccessor = this.findSuccessor(this.id, encrypted);
+				ExternalNode chunkSuccessor = this.findSuccessor(this.id, chunkID);
 
 				if (successor.id == this.id) {
 					deleteChunk(this.id, chunkID);
@@ -364,8 +364,7 @@ public class Node extends ExternalNode {
 	}
 
 	public String reclaim(DataOutputStream out, DataInputStream in) throws IOException {
-
-		int spaceToReclaim = getUsedSpace() - in.readInt();
+		int spaceToReclaim = (1000 * getUsedSpace()) - in.readInt();
 
 		File chunks = new File("chunks-" + id);
 

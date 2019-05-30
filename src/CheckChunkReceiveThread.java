@@ -7,14 +7,16 @@ class CheckChunkReceiveThread implements Runnable {
     private ExternalNode successor;
     private String key;
     private String fileName;
-    private ArrayList<String> keys;
+	private ArrayList<String> keys;
+	private int actualRepDegree;
 
-    public CheckChunkReceiveThread(Node node, ExternalNode successor, String key, ArrayList<String> keys, String fileName) {
+    public CheckChunkReceiveThread(Node node, ExternalNode successor, String key, ArrayList<String> keys, String fileName, int actualRepDegree) {
         this.node = node;
         this.successor = successor;
         this.key = key;
         this.fileName = fileName;
-        this.keys = keys;
+		this.keys = keys;
+		this.actualRepDegree = actualRepDegree;
     }
 
     @Override
@@ -23,7 +25,6 @@ class CheckChunkReceiveThread implements Runnable {
             int index = key.indexOf("-");
             String begin = key.substring(0, index + 1);
             int repDegree = Integer.parseInt(key.substring(index + 1)) + 1;
-            int actualRepDegree = Integer.parseInt(node.getKey(this.node.id, Utils.getSHA1(fileName)).split(":")[1]);
 
             if(actualRepDegree <= repDegree){
                 return;
@@ -39,7 +40,7 @@ class CheckChunkReceiveThread implements Runnable {
 				node.storage.addRestoredChunk(chunkID.toString(), fileName, node.storage.readChunk(chunkID));
 			} else {
 				node.executor.execute(new ChunkRequestThread(node, successor, chunkID, fileName));
-				node.executor.schedule(new CheckChunkReceiveThread(node, successor, key, keys, fileName), 5, TimeUnit.SECONDS);
+				node.executor.schedule(new CheckChunkReceiveThread(node, successor, key, keys, fileName, actualRepDegree), 5, TimeUnit.SECONDS);
 			}
         }
     }

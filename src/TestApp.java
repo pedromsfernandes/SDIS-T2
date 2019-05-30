@@ -189,7 +189,6 @@ class TestApp {
     private static void delete(String fileName, DataOutputStream out, DataInputStream in) throws IOException {
         out.writeUTF("DELETE");
         out.writeUTF(fileName);
-        System.out.println(in.readUTF());
     }
 
     public static void main(String[] args) throws IOException {
