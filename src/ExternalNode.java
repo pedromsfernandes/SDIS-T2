@@ -16,17 +16,34 @@ public class ExternalNode {
 	String ip;
 	int port;
 
+	/**
+	 * 
+	 * @param ip
+	 * @param port
+	 * @return
+	 */
 	private static BigInteger getId(String ip, int port) {
 		String info = ip + ":" + port;
 		return Utils.getSHA1(info);
 	}
 
+	/**
+	 * 
+	 * @param ip
+	 * @param port
+	 */
 	ExternalNode(String ip, int port) {
 		this.id = getId(ip, port);
 		this.ip = ip;
 		this.port = port;
 	}
 
+	/**
+	 * 
+	 * @param requestId
+	 * @param id
+	 * @return
+	 */
 	public ExternalNode findSuccessor(BigInteger requestId, BigInteger id) {
 		try {
 			SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
@@ -62,6 +79,11 @@ public class ExternalNode {
 		return null;
 	}
 
+	/**
+	 * 
+	 * @param requestId
+	 * @return
+	 */
 	public ExternalNode getPredecessor(BigInteger requestId) {
 		try {
 			SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
@@ -97,6 +119,11 @@ public class ExternalNode {
 		return null;
 	}
 
+	/**
+	 * 
+	 * @param requestId
+	 * @param other
+	 */
 	public void notify(BigInteger requestId, ExternalNode other) {
 		try {
 			SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
@@ -120,6 +147,11 @@ public class ExternalNode {
 		}
 	}
 
+	/**
+	 * 
+	 * @param requestId
+	 * @return
+	 */
 	public boolean failed(BigInteger requestId) {
 		try {
 			SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
@@ -149,6 +181,11 @@ public class ExternalNode {
 		return true;
 	}
 
+	/**
+	 * 
+	 * @param node
+	 * @param keys
+	 */
 	public void giveKeys(Node node, HashMap<BigInteger, String> keys) {
 		if (keys.size() == 0)
 			return;
@@ -186,6 +223,12 @@ public class ExternalNode {
 		}
 	}
 
+	/**
+	 * 
+	 * @param requestId
+	 * @param encrypted
+	 * @param value
+	 */
 	public void storeKey(BigInteger requestId, BigInteger encrypted, String value) {
 		try {
 			SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
@@ -207,7 +250,13 @@ public class ExternalNode {
 			e.printStackTrace();
 		}
 	}
-
+	
+	/**
+	 * 
+	 * @param requestId
+	 * @param id
+	 * @return
+	 */
 	public String getKey(BigInteger requestId, BigInteger id) {
 		try {
 			SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
@@ -240,6 +289,11 @@ public class ExternalNode {
 		return null;
 	}
 
+	/**
+	 * 
+	 * @param requestId
+	 * @param key
+	 */
 	public void deleteKey(BigInteger requestId, BigInteger key) {
 		try {
 			SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
@@ -263,6 +317,11 @@ public class ExternalNode {
 		}
 	}
 
+	/**
+	 * 
+	 * @param requestId
+	 * @param key
+	 */
 	public void deleteChunk(BigInteger requestId, BigInteger key) {
 		try {
 			SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();

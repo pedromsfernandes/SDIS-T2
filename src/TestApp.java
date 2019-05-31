@@ -1,16 +1,11 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 
 import javax.net.ssl.SSLSocket;
@@ -33,6 +28,11 @@ class TestApp {
         "<opnd_2>\nThis operand is an integer that specifies the desired replication degree and applies only to the backup protocol.");
   }
 
+  /**
+   * 
+   * @param args
+   * @return
+   */
   public static boolean validateArguments(String[] args) {
     if (args.length < 4 || args.length > 5) {
       System.err.println("ERROR: Invalid number of arguments!");
@@ -94,6 +94,14 @@ class TestApp {
     return true;
   }
 
+  /**
+   * 
+   * @param fileName
+   * @param chunkNo
+   * @param replicationDegree
+   * @param chunkContent
+   * @return
+   */
   public static byte[] buildBackupMessage(String fileName, int chunkNo,
                                           int replicationDegree,
                                           byte[] chunkContent) {
@@ -105,12 +113,27 @@ class TestApp {
     return Utils.concatenateArrays(header_b, chunkContent);
   }
 
+  /**
+   * 
+   * @param spaceToReclaim
+   * @param out
+   * @param in
+   * @throws IOException
+   */
   private static void reclaim(int spaceToReclaim, DataOutputStream out,
                               DataInputStream in) throws IOException {
     out.writeUTF("RECLAIM");
     out.writeInt(spaceToReclaim);
   }
 
+  /**
+   * 
+   * @param fileName
+   * @param replicationDegree
+   * @param out
+   * @param in
+   * @throws IOException
+   */
   private static void backup(String fileName, int replicationDegree,
                              DataOutputStream out, DataInputStream in)
       throws IOException {
@@ -129,6 +152,11 @@ class TestApp {
     }
   }
 
+  /**
+   * 
+   * @param chunks
+   * @param fileName
+   */
   private static void restoreFile(ArrayList<byte[]> chunks, String fileName) {
     int chunkSize = 64 * 1000; // 64KByte
 
@@ -158,6 +186,13 @@ class TestApp {
     }
   }
 
+  /**
+   * 
+   * @param fileName
+   * @param out
+   * @param in
+   * @throws IOException
+   */
   private static void restore(String fileName, DataOutputStream out,
                               DataInputStream in) throws IOException {
     out.writeUTF("RESTORE");
@@ -179,12 +214,24 @@ class TestApp {
     restoreFile(chunks, fileName);
   }
 
+  /**
+   * 
+   * @param fileName
+   * @param out
+   * @param in
+   * @throws IOException
+   */
   private static void delete(String fileName, DataOutputStream out,
                              DataInputStream in)throws IOException {
     out.writeUTF("DELETE");
     out.writeUTF(fileName);
   }
 
+  /**
+   * 
+   * @param args
+   * @throws IOException
+   */
   public static void main(String[] args) throws IOException {
     if (!validateArguments(args))
       return;

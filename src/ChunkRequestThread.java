@@ -14,6 +14,13 @@ class ChunkRequestThread implements Runnable{
     private Node node;
     private String file;
 
+    /**
+     * 
+     * @param node
+     * @param successor
+     * @param chunkID
+     * @param file
+     */
     public ChunkRequestThread(Node node, ExternalNode successor, BigInteger chunkID, String file) {
 
         this.node = node;

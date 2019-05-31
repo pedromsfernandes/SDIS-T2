@@ -6,10 +6,16 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
+
 public class Utils {
+	/**
+	 * 
+	 * @param message
+	 * @param length
+	 * @return
+	 */
 	public static byte[] getChunkContent(byte[] message, int length) {
 
 		byte[] chunkContent = new byte[64 * 1000];
@@ -26,6 +32,11 @@ public class Utils {
 		return chunkContent;
 	}
 
+	/**
+	 * 
+	 * @param message
+	 * @return
+	 */
 	public static String[] getHeader(byte[] message) {
 
 		byte[] header = new byte[1000];
@@ -42,6 +53,10 @@ public class Utils {
 		return new String(header, StandardCharsets.US_ASCII).split("\\s+");
 	}
 
+	/**
+	 * 
+	 * @return
+	 */
 	public static char getCharSeparator() {
 		String os = System.getProperty("os.name");
 
@@ -51,6 +66,12 @@ public class Utils {
 		return '/';
 	}	
 
+	/**
+	 * 
+	 * @param a
+	 * @param b
+	 * @return
+	 */
 	public static byte[] concatenateArrays(byte[] a, byte[] b) {
 		byte[] c = new byte[a.length + b.length];
 		System.arraycopy(a, 0, c, 0, a.length);
@@ -59,6 +80,11 @@ public class Utils {
 		return c;
 	}
 
+	/**
+	 * 
+	 * @param input
+	 * @return
+	 */
 	public static BigInteger getSHA1(String input){
 		try {
 			MessageDigest digest = MessageDigest.getInstance("SHA-1");
@@ -70,6 +96,11 @@ public class Utils {
 		}
 	}
 	
+	/**
+	 * 
+	 * @param fileName
+	 * @return
+	 */
 	public static ArrayList<byte[]> splitFile(String fileName) {
 
         int chunkSize = 64 * 1000; // 64KByte

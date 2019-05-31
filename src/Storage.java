@@ -7,7 +7,6 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -18,6 +17,10 @@ class Storage {
 
     private String chunksPath;
 
+    /**
+     * 
+     * @param nodeId
+     */
     public Storage(String nodeId) {
         chunksPath = "chunks-" + nodeId;
         new File(chunksPath).mkdirs();
@@ -25,10 +28,20 @@ class Storage {
         restoredChunksCount = new ConcurrentHashMap<String, AtomicInteger>();
     }
 
+    /**
+     * 
+     * @param file
+     * @return
+     */
     public int getFileCount(String file){
         return restoredChunksCount.get(file).get();
     }
 
+    /**
+     * 
+     * @param keys
+     * @return
+     */
     public ArrayList<byte[]> getChunks(ArrayList<String> keys){
         ArrayList<byte[]> chunks = new ArrayList<byte[]>();
 
@@ -39,15 +52,31 @@ class Storage {
         return chunks;
     }
 
+    /**
+     * 
+     * @param key
+     * @param file
+     * @param content
+     */
     public void addRestoredChunk(String key, String file, byte[] content){
         restoredChunks.put(key, content);
         restoredChunksCount.replace(file, new AtomicInteger(restoredChunksCount.get(file).decrementAndGet()));
     }
 
+    /**
+     * 
+     * @param file
+     * @param numChunks
+     */
     public void addFileToRestore(String file, int numChunks){
         restoredChunksCount.put(file, new AtomicInteger(numChunks));
     }
 
+    /**
+     * 
+     * @param keys
+     * @param file
+     */
     public void freeRestoredChunks(ArrayList<String> keys, String file){
         restoredChunksCount.remove(file);
 
@@ -56,6 +85,11 @@ class Storage {
         }
     }
 
+    /**
+     * 
+     * @param key
+     * @param chunk
+     */
     public void storeChunk(BigInteger key, byte[] chunk) {
         String path = chunksPath + Utils.getCharSeparator() + key.toString() + ".chunk";
 
@@ -78,6 +112,11 @@ class Storage {
 
     }
 
+    /**
+     * 
+     * @param key
+     * @return
+     */
     public byte[] readChunk(BigInteger key) {
         int chunkSize = 64 * 1000;
         byte[] chunk = new byte[chunkSize];
@@ -112,11 +151,20 @@ class Storage {
 
     }
 
+    /**
+     * 
+     * @param key
+     */
     public void delete(BigInteger key) {
         String path = chunksPath + Utils.getCharSeparator() + key.toString() + ".chunk";
         new File(path).delete();
     }
 
+    /**
+     * 
+     * @param key
+     * @return
+     */
     public byte[] getChunkContent(BigInteger key) {
         return Utils.splitFile(chunksPath + Utils.getCharSeparator() + key.toString() + ".chunk").get(0);
     }

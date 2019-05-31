@@ -1,5 +1,3 @@
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 
 import javax.net.ssl.SSLServerSocket;
@@ -10,6 +8,10 @@ class ClientRequestListenerThread implements Runnable {
 
     private Node node;
 
+    /**
+     * 
+     * @param node
+     */
     public ClientRequestListenerThread(Node node) {
         this.node = node;
     }

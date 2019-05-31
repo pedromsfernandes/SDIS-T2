@@ -10,6 +10,15 @@ class CheckChunkReceiveThread implements Runnable {
 	private ArrayList<String> keys;
 	private int actualRepDegree;
 
+    /**
+     * 
+     * @param node
+     * @param successor
+     * @param key
+     * @param keys
+     * @param fileName
+     * @param actualRepDegree
+     */
     public CheckChunkReceiveThread(Node node, ExternalNode successor, String key, ArrayList<String> keys, String fileName, int actualRepDegree) {
         this.node = node;
         this.successor = successor;

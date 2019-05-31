@@ -8,6 +8,11 @@ class ClientRequestHandlerThread implements Runnable {
   private Node node;
   private SSLSocket s;
 
+  /**
+   * 
+   * @param node
+   * @param s
+   */
   public ClientRequestHandlerThread(Node node, SSLSocket s) {
     this.node = node;
     this.s = s;

@@ -1,5 +1,4 @@
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 
@@ -9,9 +8,13 @@ class ChunkReceiverThread implements Runnable {
 
     private Node peer;
     private DataInputStream dis;
-    private DataOutputStream dos;
     private SSLSocket server;
 
+    /**
+     * 
+     * @param peer
+     * @param server
+     */
     public ChunkReceiverThread(Node peer, SSLSocket server) {
         this.peer = peer;
         this.server = server;
@@ -25,7 +28,6 @@ class ChunkReceiverThread implements Runnable {
 
                 try {
                     this.dis = new DataInputStream(server.getInputStream());
-                    this.dos = new DataOutputStream(server.getOutputStream());
 
                 } catch (IOException e) {
                     // TODO Auto-generated catch block

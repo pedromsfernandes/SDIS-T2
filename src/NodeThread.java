@@ -11,10 +11,19 @@ import javax.net.ssl.SSLSocket;
 public class NodeThread implements Runnable {
 	private Node node;
 
+	/**
+	 * 
+	 * @param node
+	 */
 	NodeThread(Node node) {
 		this.node = node;
 	}
 
+	/**
+	 * 
+	 * @param connection
+	 * @param args
+	 */
 	public void findSuccessor(SSLSocket connection, String[] args) {
 		ExternalNode successor = node.findSuccessor(new BigInteger(args[1]), new BigInteger(args[2]));
 
@@ -35,6 +44,11 @@ public class NodeThread implements Runnable {
 		}
 	}
 
+	/**
+	 * 
+	 * @param connection
+	 * @param args
+	 */
 	public void getPredecessor(SSLSocket connection, String[] args) {
 		ExternalNode predecessor = node.getPredecessor(new BigInteger(args[1]));
 
@@ -55,6 +69,11 @@ public class NodeThread implements Runnable {
 		}
 	}
 
+	/**
+	 * 
+	 * @param connection
+	 * @param args
+	 */
 	public void notify(SSLSocket connection, String[] args) {
 		node.notify(new BigInteger(args[1]), new ExternalNode(args[2], Integer.parseInt(args[3])));
 
@@ -68,6 +87,11 @@ public class NodeThread implements Runnable {
 		}
 	}
 
+	/**
+	 * 
+	 * @param connection
+	 * @param args
+	 */
 	public void hi(SSLSocket connection, String[] args) {
 		String response = "HI " + node.id + " \n";
 
@@ -81,6 +105,11 @@ public class NodeThread implements Runnable {
 		}
 	}
 
+	/**
+	 * 
+	 * @param connection
+	 * @param args
+	 */
 	public void storeKey(SSLSocket connection, String[] args) {
 		try {
 			node.storeKey(new BigInteger(args[1]), new BigInteger(args[2]), args[3]);
@@ -94,6 +123,11 @@ public class NodeThread implements Runnable {
 		}
 	}
 
+	/**
+	 * 
+	 * @param connection
+	 * @param args
+	 */
 	public void getKey(SSLSocket connection, String[] args) {
 		String value = node.getKey(new BigInteger(args[1]), new BigInteger(args[2]));
 
@@ -108,6 +142,11 @@ public class NodeThread implements Runnable {
 		}
 	}
 
+	/**
+	 * 
+	 * @param connection
+	 * @param args
+	 */
 	public void deleteKey(SSLSocket connection, String[] args) {
 		node.deleteKey(new BigInteger(args[1]), new BigInteger(args[2]));
 
@@ -121,6 +160,11 @@ public class NodeThread implements Runnable {
 		}
 	}
 
+	/**
+	 * 
+	 * @param connection
+	 * @param args
+	 */
 	public void deleteChunk(SSLSocket connection, String[] args) {
 		node.deleteChunk(new BigInteger(args[1]), new BigInteger(args[2]));
 
@@ -134,6 +178,11 @@ public class NodeThread implements Runnable {
 		}
 	}
 
+	/**
+	 * 
+	 * @param connection
+	 * @throws IOException
+	 */
 	public void interpretMessage(SSLSocket connection) throws IOException {
 		BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 

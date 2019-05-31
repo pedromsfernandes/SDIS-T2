@@ -10,11 +10,15 @@ class ChunkRequestListenerThread implements Runnable {
     private DataOutputStream dos;
     private DataInputStream dis;
     private Node node;
-    private SSLSocket server;
 
+    /**
+     * 
+     * @param node
+     * @param server
+     */
     public ChunkRequestListenerThread(Node node, SSLSocket server) {
         this.node = node;
-        this.server = server;
+
         try {
             this.dis = new DataInputStream(server.getInputStream());
             this.dos = new DataOutputStream(server.getOutputStream());
