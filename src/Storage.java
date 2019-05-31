@@ -56,41 +56,8 @@ class Storage {
         }
     }
 
-    public void restoreFile(String fileId, String fileName) throws IOException {
-        String path = fileName;
-        ConcurrentHashMap<Integer, byte[]> chunks = getChunks(fileId);
-
-        FileOutputStream fout = new FileOutputStream(path);
-        FileChannel fcout = fout.getChannel();
-
-        ByteBuffer buffer = ByteBuffer.allocate(64 * 1000);
-
-        for (Map.Entry<Integer, byte[]> chunk : chunks.entrySet()) {
-            buffer.clear();
-            buffer.put(chunk.getValue());
-            buffer.flip();
-            fcout.write(buffer);
-        }
-
-        fout.close();
-    }
-
-    public ConcurrentHashMap<Integer, byte[]> getChunks(String fileId) {
-
-        ConcurrentHashMap<Integer, byte[]> chunks = new ConcurrentHashMap<Integer, byte[]>();
-
-        for (Map.Entry<String, byte[]> entry : restoredChunks.entrySet()) {
-            String key = entry.getKey();
-            if (key.contains(fileId)) {
-                chunks.put(Integer.parseInt(key.substring(key.indexOf("-") + 1)), entry.getValue());
-            }
-        }
-
-        return chunks;
-    }
-
     public void storeChunk(BigInteger key, byte[] chunk) {
-        String path = chunksPath + "/" + key.toString() + ".chunk";
+        String path = chunksPath + Utils.getCharSeparator() + key.toString() + ".chunk";
 
         try {
 
@@ -114,7 +81,7 @@ class Storage {
     public byte[] readChunk(BigInteger key) {
         int chunkSize = 64 * 1000;
         byte[] chunk = new byte[chunkSize];
-        String path = chunksPath + "/" + key.toString() + ".chunk";
+        String path = chunksPath + Utils.getCharSeparator() + key.toString() + ".chunk";
 
         FileInputStream fin = null;
         try {
@@ -146,11 +113,11 @@ class Storage {
     }
 
     public void delete(BigInteger key) {
-        String path = chunksPath + "/" + key.toString() + ".chunk";
+        String path = chunksPath + Utils.getCharSeparator() + key.toString() + ".chunk";
         new File(path).delete();
     }
 
     public byte[] getChunkContent(BigInteger key) {
-        return Utils.splitFile(chunksPath + "/" + key.toString() + ".chunk").get(0);
+        return Utils.splitFile(chunksPath + Utils.getCharSeparator() + key.toString() + ".chunk").get(0);
     }
 }

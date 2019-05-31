@@ -94,24 +94,6 @@ class TestApp {
     return true;
   }
 
-  private static byte[] encryptFileId(String fileName) {
-
-    String dateModified = "", owner = "";
-
-    try {
-      Path file = Paths.get(fileName);
-      BasicFileAttributes attr =
-          Files.readAttributes(file, BasicFileAttributes.class);
-
-      dateModified = attr.lastModifiedTime().toString();
-      owner = Files.getOwner(file).getName();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-
-    return Utils.getSHA(fileName + "-" + dateModified + "-" + owner);
-  }
-
   public static byte[] buildBackupMessage(String fileName, int chunkNo,
                                           int replicationDegree,
                                           byte[] chunkContent) {
