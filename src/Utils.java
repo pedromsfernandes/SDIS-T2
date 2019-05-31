@@ -8,11 +8,8 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Random;
 
 public class Utils {
-	private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
-
 	public static byte[] getChunkContent(byte[] message, int length) {
 
 		byte[] chunkContent = new byte[64 * 1000];
@@ -54,17 +51,6 @@ public class Utils {
 		return '/';
 	}	
 
-	public static String bytesToHex(byte[] hash) {
-		StringBuffer hexString = new StringBuffer();
-		for (int i = 0; i < hash.length; i++) {
-			String hex = Integer.toHexString(0xff & hash[i]);
-			if (hex.length() == 1)
-				hexString.append('0');
-			hexString.append(hex);
-		}
-		return hexString.toString();
-	}
-
 	public static byte[] concatenateArrays(byte[] a, byte[] b) {
 		byte[] c = new byte[a.length + b.length];
 		System.arraycopy(a, 0, c, 0, a.length);
@@ -82,51 +68,6 @@ public class Utils {
 			e.printStackTrace();
 			return new BigInteger(1,"0".getBytes());
 		}
-	}
-
-	public static byte[] getSHA(String input) {
-		try {
-
-			// Static getInstance method is called with hashing SHA
-			MessageDigest md = MessageDigest.getInstance("SHA-256");
-
-			// digest() method called
-			// to calculate message digest of an input
-			// and return array of byte
-			byte[] messageDigest = md.digest(input.getBytes(StandardCharsets.UTF_8));
-
-			return messageDigest;
-		}
-		// For specifying wrong message digest algorithms
-		catch (NoSuchAlgorithmException e) {
-			System.out.println("Exception thrown" + " for incorrect algorithm: " + e);
-
-			return null;
-		}
-	}
-
-	public static byte[] hexStringToByteArray(String s) {
-		int len = s.length();
-		byte[] data = new byte[len / 2];
-		for (int i = 0; i < len; i += 2) {
-			data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4) + Character.digit(s.charAt(i + 1), 16));
-		}
-		return data;
-	}
-
-	public static int getRandomNumber(int low, int high) {		
-		Random r = new Random();
-		return r.nextInt(high-low) + low;
-	}
-
-	public static char[] hexString(byte[] info) {
-        char[] hexChars = new char[info.length * 2];
-        for (int j = 0; j < info.length; j++) {
-            int v = info[j] & 0xFF;
-            hexChars[j * 2] = hexArray[v >>> 4];
-            hexChars[j * 2 + 1] = hexArray[v & 0x0F];
-        }
-        return hexChars;
 	}
 	
 	public static ArrayList<byte[]> splitFile(String fileName) {

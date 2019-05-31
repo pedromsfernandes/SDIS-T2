@@ -4,15 +4,25 @@ $ javac src/*.java
 
 Run
 
-Server: java "-Djavax.net.ssl.keyStore=keystore" "-Djavax.net.ssl.keyStorePassword=sdis1822" Node
+Node: 
+$ java "-Djavax.net.ssl.keyStore=keystore" "-Djavax.net.ssl.keyStorePassword=sdis1822" Node <ip> <port> [ <ring_node_ip> <ring_node_port> ]
 
-TestApp: java "-Djavax.net.ssl.trustStore=trustStore" "-Djavax.net.ssl.trustStorePassword=sdis1822" TestApp <PROTOCOL> <opnd_1> <opnd_2>
+TestApp: 
+$ java "-Djavax.net.ssl.trustStore=trustStore" "-Djavax.net.ssl.trustStorePassword=sdis1822" TestApp <node_ip> <node_port> <PROTOCOL> <opnd_1> <opnd_2>
 
-java "-Djavax.net.ssl.keyStore=keystore" "-Djavax.net.ssl.keyStorePassword=sdis1822" "-Djavax.net.ssl.trustStore=truststore" "-Djavax.net.ssl.trustStorePassword=sdis1822" ChordTest
+Note: since we use two different ports (one for client requests and other for communication between peers), when specifying a request to a certain node, the port
+used must be the port used when inicializing the server plus 80.
 
+Examples
 
-EXEMPLOS:
+TestApp: 
+$ java "-Djavax.net.ssl.trustStore=truststore" "-Djavax.net.ssl.trustStorePassword=sdis1822" TestApp 10.227.161.149 8080 BACKUP ~/Transferências/a154ffbcec538a4161a406abf62f5b76-original.pdf 1
+$ java "-Djavax.net.ssl.trustStore=truststore" "-Djavax.net.ssl.trustStorePassword=sdis1822" TestApp 10.227.161.149 8080 RESTORE ~/Transferências/a154ffbcec538a4161a406abf62f5b76-original.pdf
+$ java "-Djavax.net.ssl.trustStore=truststore" "-Djavax.net.ssl.trustStorePassword=sdis1822" TestApp 10.227.161.149 8080 DELETE ~/Transferências/a154ffbcec538a4161a406abf62f5b76-original.pdf
+$ java "-Djavax.net.ssl.trustStore=truststore" "-Djavax.net.ssl.trustStorePassword=sdis1822" TestApp 10.227.161.149 8080 RECLAIM 100
 
-java "-Djavax.net.ssl.trustStore=truststore" "-Djavax.net.ssl.trustStorePassword=sdis1822" TestApp localhost 8080 BACKUP ~/Transferências/a154ffbcec538a4161a406abf62f5b76-original.pdf 1
+Ring starter node: 
+$ java "-Djavax.net.ssl.keyStore=keystore" "-Djavax.net.ssl.keyStorePassword=sdis1822" "-Djavax.net.ssl.trustStore=truststore" "-Djavax.net.ssl.trustStorePassword=sdis1822" Node 10.227.161.149 8000 10.227.161.149 8000
 
-java "-Djavax.net.ssl.keyStore=keystore" "-Djavax.net.ssl.keyStorePassword=sdis1822" "-Djavax.net.ssl.trustStore=truststore" "-Djavax.net.ssl.trustStorePassword=sdis1822" Node localhost 8000
+Connect to ring: 
+$ java "-Djavax.net.ssl.keyStore=keystore" "-Djavax.net.ssl.keyStorePassword=sdis1822" "-Djavax.net.ssl.trustStore=truststore" "-Djavax.net.ssl.trustStorePassword=sdis1822" Node 10.227.161.150 8000

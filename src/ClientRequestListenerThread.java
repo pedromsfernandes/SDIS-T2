@@ -28,42 +28,11 @@ class ClientRequestListenerThread implements Runnable {
 
         while (true) {
             SSLSocket s;
-            DataOutputStream out = null;
-            DataInputStream in = null;
-            String request = "";
-            String response = "";
-
+    
             try {
                 s = (SSLSocket) ss.accept();
 
-                out = new DataOutputStream(s.getOutputStream());
-                in = new DataInputStream(s.getInputStream());
-
-                request = in.readUTF();
-
-                switch (request) {
-                case "BACKUP":
-                    response = node.backup(out, in);
-                    break;
-                case "RESTORE":
-                    response = node.restore(out, in);
-                    break;
-                case "DELETE":
-                    response = node.delete(out, in);
-                    break;
-                case "RECLAIM":
-                    response = node.reclaim(out, in);
-                    break;
-                default:
-                    break;
-                }
-
-                System.out.println(response);
-                out.writeUTF(response);
-
-                in.close();
-                out.close();
-                s.close();
+                node.executor.execute(new ClientRequestHandlerThread(node, s));
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
