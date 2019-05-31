@@ -1,0 +1,221 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+% USFD Academic Report Template
+% Prof. Roger K. Moore
+% University of Sheffield
+% 30 July 2018
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\documentclass[11pt,oneside]{book}
+\usepackage[margin=1.2in]{geometry}
+\usepackage[toc,page]{appendix}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{lipsum}
+\usepackage{caption}
+\usepackage[portuguese]{babel}
+\usepackage{setspace}
+\usepackage{listings}
+\usepackage{color}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{frame=tb,
+  language=Java,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3
+}
+
+\setcounter{chapter}{1}% Not using chapters, but they're used in the counters
+
+\begin{document}
+
+\begin{titlepage}
+
+\begin{center}
+{\LARGE Universidade do Porto}\\[1.5cm]
+\linespread{1.0}\huge {\bfseries Peer-to-peer backup service for the Internet}\\[1.5cm]
+\linespread{1}
+\includegraphics[width=7.5cm]{feup.png}\\[1cm]
+
+{\large Bruno Sousa \textbf{up201604145}@fe.up.pt}\\
+{\large Catarina Figueiredo \textbf{up210606334}@fe.up.pt}\\
+{\large Francisco Filipe \textbf{up201604601}@fe.up.ptt}\\
+{\large Pedro Fernandes \textbf{up201603846}@fe.up.pt}\\[1cm]
+{\large \emph{Unidade Curricular:} Sistemas Distribuídos}\\
+{\large \emph{Docente:} Diana Guimarães}\\
+{\large \emph{Turma:} MIEIC02}\\
+{\large \emph{Grupo:} 8}\\[2cm]
+
+\large \today
+\end{center}
+
+\end{titlepage}
+
+% -------------------------------------------------------------------
+% Contents, list of figures, list of tables
+% -------------------------------------------------------------------
+
+\doublespacing
+\tableofcontents
+\singlespacing
+
+% -------------------------------------------------------------------
+% Main sections (as required)
+% -------------------------------------------------------------------
+
+\mainmatter
+
+\section{Introdução}
+\paragraph{}
+Este relatório foi desenvolvido no âmbito do segundo trabalho prático da 
+Unidade Curricular de Sistemas Distribuídos. O seu objetivo é clarificar 
+alguns dos aspetos principais da implementação do projeto 
+\textit{"Peer-to-peer backup service for the Internet"}. A sua estrutura é a 
+seguinte:
+\begin{itemize}
+    \item \textbf{Overview:} As instruções necessárias
+    para compilar e executar corretamente o programa desenvolvido, tanto em Windows
+    como em Linux. Também está presente nesta secção a descrição dos scripts 
+    implementados, que ajudam na demonstração do trabalho.
+    \item \textbf{Protocolos:} Descrição detalhada dos
+    mecanismos e estruturas de dados utilizadas no desenvolvimento deste trabalho, 
+    que permitem a execução concorrente dos diferentes protocolos. Esta descrição é
+    acompanhada de alguns excertos do código fonte para ajudar a compreender a 
+    implementação desenvolvida.
+    \item \textbf{Design de Concorrência:} Descrição de cada uma das melhorias 
+    propostas, da solução pensada e da implementação desenvolvida.
+    \item \textbf{JSSE:} As instruções necessárias
+    para compilar e executar corretamente o programa desenvolvido, tanto em Windows
+    como em Linux. Também está presente nesta secção a descrição dos scripts 
+    implementados, que ajudam na demonstração do trabalho.
+    \item \textbf{Escalabilidade:} Descrição detalhada dos
+    mecanismos e estruturas de dados utilizadas no desenvolvimento deste trabalho, 
+    que permitem a execução concorrente dos diferentes protocolos. Esta descrição é
+    acompanhada de alguns excertos do código fonte para ajudar a compreender a 
+    implementação desenvolvida.
+    \item \textbf{Tolerância a Falhas:} Descrição de cada uma das melhorias 
+    propostas, da solução pensada e da implementação desenvolvida.
+\end{itemize}     
+
+\pagebreak
+
+\section{Overview}
+
+\section{Protocolos}
+
+\section{Design da Concorrência}
+
+\section{JSSE}
+\paragraph{}
+    Nesta implementação está também presente a utilização de JSSE. Este é utilizado em qualquer 
+    tipo de comunicação entre os nós de forma a garantir uma troca de mensagens segura entre estes
+    (desde pedidos e respostas de peers a transferências de ficheiros). Desta forma é protege-se 
+    a identificação de cada peer (IP e porta), tornando a comunicação mais segura. Por este motivo, 
+    não é possível indicar um protocolo específico em que se use este mecanismo pois ele está presente 
+    em todos.
+
+\paragraph{}
+    Na implementação de JSSE optou-se pela utilização da classe javax.net.ssl.SSLSocket que adiciona
+    uma camada de segurança à comunicação. Esta classe é instanciada sempre que é necessário o envio 
+    de uma nova mensagem entre nós, ou seja:
+    \begin{itemize}
+        \item \textbf{Comunicação entre Peers:} através de mensagens que  
+        \item \textbf{Comunicação entre TestApp e Peers:} através da realização do “handshake” e da 
+        troca de mensagens que indicam o protocolo a realizar.
+    \end{itemize}
+
+\begin{lstlisting}
+    SSLSocketFactory factory = (SSLSocketFactory)SSLSocketFactory.getDefault();
+    SSLSocket socket = (SSLSocket) factory.createSocket(ip, port);
+
+    DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+    BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+    String message = "FINDSUCCESSOR " + requestId + " " + id + " \n";
+    System.out.println("[Node " + requestId + "] " + message);
+    out.writeBytes(message);
+
+    String response = in.readLine().trim();
+    socket.close();
+\end{lstlisting}
+
+\paragraph{}
+    O excerto de código acima apresenta a implementação deste socket do lado do emissor 
+    (aquele que envia a mensagem).  A implementação é relativamente simples e muito semelhante
+    à de um socket desprovido de SSL. Apenas é necessário instanciar uma SSLFactory contendo a
+    “default factory” e criar um SSLSocket com o ip e porta respetivos. De seguida é instanciada
+    a stream de output (DataOutputStream) , encarregue de enviar a mensagem para outro nó. É 
+    também neste momento que se instancia um BufferedReader responsável pela leitura da resposta. 
+    De seguida constrói-se a mensagem a enviar pela stream de output. Na penúltima instrução, 
+    bloqueia-se a thread atual, que fica assim à espera de uma resposta por parte do recetor. 
+    Uma vez recebida esta resposta é fechado o socket.
+
+
+\begin{lstlisting}
+SSLServerSocketFactory ssf = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
+SSLServerSocket listenSocket = (SSLServerSocket) ssf.createServerSocket(node.port);
+
+while (true) {
+  SSLSocket connection = (SSLSocket) listenSocket.accept();
+  node.executor.execute(new Runnable() {
+  public void run() {
+       try {
+          interpretMessage(connection);
+       } catch (IOException e) {
+       }
+        }
+   });
+ }
+
+\end{lstlisting}
+
+\paragraph{}
+    Já este último pedaço de código apresenta a implementação deste mesmo socket do lado do recetor
+    (aquele que recebe a mensagem). Aqui é instanciada uma SSLServerFactory onde vai estar presente 
+    um SSLServerSocket.  Este último, a cada pedido que recebe, cria uma nova conexão através de um 
+    SSLSocket que vai estar responsável por esse pedido. Por último é feita uma chamada à função 
+    interpretMessage onde, de acordo com o pedido executado, realiza as operações necessárias e envia
+    uma resposta ao emissor através de uma DataOutputStream.
+
+\paragraph{}
+    Em relação às funcionalidades do JSSE que foram utilizadas, 
+
+
+\section{Escalabilidade}
+\paragraph{}
+    Para assegurar que o sistema desenvolvido é escalável foi implementado o Chord,
+    um protocolo escalável para pesquisas num sistema peer-to-peer dinâmico (com 
+    entradas e saídas frequentes de nós e com número altamente variável de nós).
+    Este fornece suporte apenas para uma operação: dada uma chave, mapeia essa 
+    chave num nó.  Esse nó pode ser responsável por armazenar um valor associado
+    à chave. 
+
+\paragraph{}
+A utilização do Chord como protocolo torna o sistema escalável pois o custo de
+uma pesquisa cresce logaritmicamente com o aumento do número de nós (log(N) em
+que N é o número de nós). Como tal, até mesmo sistemas muito grandes são 
+alcançáveis.
+
+\subsection{Implementação do Chord}
+
+
+\section{Tolerância a Falhas}
+
+\paragraph{}
+
+
+\end{document}
