@@ -87,55 +87,455 @@ alguns dos aspetos principais da implementação do projeto
 \textit{"Peer-to-peer backup service for the Internet"}. A sua estrutura é a 
 seguinte:
 \begin{itemize}
-    \item \textbf{Overview:} As instruções necessárias
-    para compilar e executar corretamente o programa desenvolvido, tanto em Windows
-    como em Linux. Também está presente nesta secção a descrição dos scripts 
-    implementados, que ajudam na demonstração do trabalho.
-    \item \textbf{Protocolos:} Descrição detalhada dos
-    mecanismos e estruturas de dados utilizadas no desenvolvimento deste trabalho, 
-    que permitem a execução concorrente dos diferentes protocolos. Esta descrição é
-    acompanhada de alguns excertos do código fonte para ajudar a compreender a 
-    implementação desenvolvida.
-    \item \textbf{Design de Concorrência:} Descrição de cada uma das melhorias 
-    propostas, da solução pensada e da implementação desenvolvida.
-    \item \textbf{JSSE:} As instruções necessárias
-    para compilar e executar corretamente o programa desenvolvido, tanto em Windows
-    como em Linux. Também está presente nesta secção a descrição dos scripts 
-    implementados, que ajudam na demonstração do trabalho.
-    \item \textbf{Escalabilidade:} Descrição detalhada dos
-    mecanismos e estruturas de dados utilizadas no desenvolvimento deste trabalho, 
-    que permitem a execução concorrente dos diferentes protocolos. Esta descrição é
-    acompanhada de alguns excertos do código fonte para ajudar a compreender a 
-    implementação desenvolvida.
-    \item \textbf{Tolerância a Falhas:} Descrição de cada uma das melhorias 
-    propostas, da solução pensada e da implementação desenvolvida.
+
+    \item \textbf{Overview:} Descrição das principais funcionalidades do projeto, 
+    incluindo os protocolos suportados pelo serviço de backup, bem como
+    um resumo das funcionalidades extra implementadas(threads, JSSE , Chord 
+    e tolerância a falhas).
+
+    \item \textbf{Protocolos:} Esta secção descreve, com recurso a excertos de código, a 
+    implementação de todos os protocolos desenvolvidos de uma forma clara e concisa.
+
+    \item \textbf{Design de Concorrência:} Aqui estão presentes os mecanismos utilizados
+    para o suporte de pedidos e acessos concorrentes durante a execução do sistema.
+    Mais uma vez são utilizados alguns pedaços de código para mais facilmente expôr o
+    raciocínio por detrás da implementação.
+
+    \item \textbf{JSSE:} Descrição da implementação de JSEE neste projeto. Nesta secção
+    expõe-se os recursos utilizados neste projeto que adicionam uma camada de segurança
+    ao mesmo. É também discutido em que situações estes são utilizados e explorada
+    (com recurso a código desenvolvido) a implementação em si.
+
+    \item \textbf{Escalabilidade:} Nesta secção está presente a implementação
+    do protocolo Chord. É apresentada, de forma breve, qual a funcionalidade deste,
+    sendo posteriormente abordados alguns dos conceitos principais e implementações 
+    desenvolvidas no projeto.
+    \item \textbf{Tolerância a Falhas:} Por último é abordada a forma como se
+    previnem falhas que possam surgir ao longo da execução. Nesta secção estão presentes não 
+    só a solução pensada como a sua execução.
+
 \end{itemize}     
 
 \pagebreak
 
 \section{Overview}
+\paragraph{}
+O presente projeto tem como objetivo a implementação de um serviço de backup. Este serviço 
+executa operações de Backup, Delete, Restore e Reclaim. Foi decidido utilizar JSSE para garantir 
+um canal de comunicação seguro, Thread pools para a comunicação entre nós da rede, Java NIO para a 
+leitura dos ficheiros e, por último, decidiu-se implementar o Chord de forma a assegurar que 
+o sistema desenvolvido fosse escalável.
+
+\subsection{Compilação}
+\paragraph{}
+Para compilar este projeto é necessário executar o comando seguinte no diretório onde se
+encontra o projeto.
+\begin{lstlisting}
+    javac *.java
+\end{lstlisting}
+
+\subsection{Execução}
+\paragraph{}
+Para facilitar a execução do projeto foram desenvolvidos scripts para a criação dos nós e 
+execução dos protocolos. Caso o sistema operativo seja windows é necessário a utilização de 
+git bash para correr os scripts. 
+
+\paragraph{}
+Para executar o projeto é necessário em primeiro lugar, inicializar o   \textit{chord ring}. 
+Para isso deve-se correr a seguinte instrução:
+
+\begin{lstlisting}
+java  "-Djavax.net.ssl.keyStore=keystore" 
+      "-Djavax.net.ssl.keyStorePassword=sdis1822" 
+      "-Djavax.net.ssl.trustStore=truststore" 
+      "-Djavax.net.ssl.trustStorePassword=sdis1822" 
+       Node $NODE_IP $NODE_PORT
+
+//Script
+./ring_node.sh  $NODE_IP $NODE_PORT
+
+\end{lstlisting}
+
+\paragraph{}
+Os argumentos são respetivamente, o IP e a Porta do nó que pretendemos adicionar ao 
+\textit{chord ring}. 
+Caso pretendamos adicionar mais nós ao \textit{chord ring} devemos executar a seguinte
+instrução:
+\begin{lstlisting}
+    java "-Djavax.net.ssl.keyStore=keystore" 
+         "-Djavax.net.ssl.keyStorePassword=sdis1822" 
+         "-Djavax.net.ssl.trustStore=truststore" 
+         "-Djavax.net.ssl.trustStorePassword=sdis1822" 
+         Node $NODE_IP $NODE_PORT $RING_NODE_IP $RING_NODE_PORT
+    
+    //Script
+    ./join_node.sh $NODE_IP $NODE_PORT $RING_NODE_IP $RING_NODE_PORT
+\end{lstlisting}
+
+\paragraph{}
+Os argumentos \$NODE\_IP e \$NODE\_PORT  são respetivamente, o IP e a Porta do nó que pretendemos
+adicionar. Os dois últimos argumentos, \$RING\_NODE\_IP e \$RING\_NODE\_PORT são o IP e a Porta do
+nó ao qual nos queremos conectar, este nó tem que pertencer ao \textit{chord ring}. 
+Decidimos passar como argumento o IP do nó ao qual nos pretendemos conectar visto que, como os
+computadores têm conexões de vários tipos(wifi, cabo, etc), não encontramos uma maneira de 
+através de código o fazer, por isso, decidimos fazê-lo manualmente.
+
+\paragraph{}
+Só depois de iniciarmos os servidores podemos executar os protocolos desenvolvidos. Para invocar
+qualquer um dos protocolos implementados é necessário correr um comando com o seguinte formato. 
+
+\begin{lstlisting}
+    java "-Djavax.net.ssl.trustStore=truststore" 
+         "-Djavax.net.ssl.trustStorePassword=sdis1822" 
+         TestApp $NODE_IP $NODE_PORT $PROTOCOL $OPND_1 $OPND_2
+    
+    //Script: 
+    ./test_app.sh $NODE_IP $NODE_PORT $PROTOCOL $OPND_1 $OPND_2
+\end{lstlisting}
+
+\paragraph{}
+Os dois primeiros argumentos, \$NODE\_IP e \$NODE\_PORT são o IP e a Porta do nó ao qual 
+nos pretendemos conectar. O terceiro argumento, \$PROTOCOL  é o nome do protocolo que pretendemos
+executar (BACKUP, DELETE, RECLAIM OU RESTORE). Os argumentos seguintes \$OPND\_1 e \$OPND\_2 
+variam de protocolo para protocolo, apenas o protocolo BACKUP utiliza o \$OPND\_2.
+
+\subsubsection{Backup}
+Para invocar o protocolo Backup os parâmetros deverão ser:
+\begin{itemize}
+    \item \$PROTOCOL = “BACKUP”
+    \item \$OPND\_1 = Nome do ficheiro
+    \item \$OPND\_2 = Desired replication degree
+\end{itemize}
+
+\subsubsection{Delete}
+Depois de realizado o backup podemos eliminar o backup do ficheiro através do comando Delete.
+\begin{itemize}
+    \item \$PROTOCOL = “DELETE”
+    \item \$OPND\_1 = Nome do ficheiro
+\end{itemize}
+
+\pagebreak
+
+\subsubsection{Restore}
+Caso pretendamos recuperar o ficheiro ao qual fizemos backup podemos fazer restore do mesmo.
+\begin{itemize}
+    \item \$PROTOCOL = “RESTORE”
+    \item \$OPND\_1 = Nome do ficheiro
+\end{itemize}
+
+\subsubsection{Reclaim}
+Se pretendermos definir um espaço máximo em disco para o nó ao qual nos queremos conectar podemos executar o comando de Reclaim.
+\begin{itemize}
+    \item \$PROTOCOL = “RECLAIM”
+    \item \$OPND\_1 = Espaço maximo em KBytes
+\end{itemize}
+
+
+\pagebreak
 
 \section{Protocolos}
+\paragraph{}
+
+A comunicação entre os nós é feita através da utilização do protocolo TCP com JSSE, desta forma
+garante-se uma comunicação segura e eficaz. 
+
+\subsection{Backup}
+
+\begin{lstlisting}
+    for (int i = 0; i < chunks; i++) {
+     int length = in.readInt();
+     byte[] message = new byte[length];
+     in.readFully(message, 0, message.length); // read the message
+
+     String[] header = Utils.getHeader(message);
+     byte[] content = Utils.getChunkContent(message, length);
+
+     if (i == 0) {
+       String key = header[1];
+       BigInteger encrypted = Utils.getSHA1(key);
+
+       ExternalNode successor = this.findSuccessor(this.id, encrypted);
+
+       if (successor.id.equals(this.id)) {
+         this.storeKey(this.id, encrypted, chunks + ":" + header[3]);
+       } else {
+         successor.storeKey(this.id, encrypted, chunks + ":" + header[3]);
+       }
+     }
+
+     for (int j = 0; j < Integer.parseInt(header[3]); j++) {
+       String key = header[1] + "-" + header[2] + "-" + j;
+       BigInteger encrypted = Utils.getSHA1(key);
+
+       ExternalNode successor = this.findSuccessor(this.id, encrypted);
+
+       if (successor.id.equals(this.id)) {
+         storeChunk(encrypted, key, content);
+       } else {
+         executor.execute(new ChunkSenderThread(this, successor, encrypted, key, content, false));
+       }
+     }
+   }
+
+\end{lstlisting}
+
+\paragraph{}
+
+\begin{enumerate}
+    
+    \item Inicialmente é executado um comando no terminal contendo: IP e a porta do nó com 
+    o qual se vai comunicar; protocolo; nome do ficheiro;\textit{replication degree}. 
+    Este pedido é processado pela TestApp sendo estabelecida uma comunicação com o nó 
+    identificado pelo IP e porta inseridos.
+    
+    \item Esta, inicialmente envia o protocolo e o número de \textit{chunks} do ficheiro
+    ao nó com o qual está a comunicar. De seguida abre o ficheiro correspondente e envia 
+    os seus  \textit{chunks} para o nó com o qual estabeleceu a comunicação. A mensagem com os 
+    \textit{chunks} tem o seguinte formato:
+    \begin{lstlisting}
+        BACKUP <filename> <chunkNo> <replicationDegree> <CRLF><CRLF> <chunkContent>
+    \end{lstlisting}
+    Termina assim, após o envio de todos os \textit{chunks}, a execução da TestApp.
+    
+    \item Este nó, que inicialmente já se encontra à escuta de pedidos (através da 
+    \textit{thread ClientRequestListenerThread}), ao fazer a leitura do protocolo, faz o
+    tratamento desse pedido executando uma chamada à função respetiva (neste caso a
+    função\textit{backup}).
+
+    \item Nesta função o nó lê o valor do número de \textit{chunks} que irá receber 
+    executando posteriormente um ciclo para o tratamento dos chunks. Na primeira iteração
+    é também necessário guardar informação sobre o ficheiro em si, sendo guardada uma chave
+    encriptada (gerada a partir do nome do ficheiro) associada ao número de \textit{chunks} e ao
+    \textit{replication degree}.
+            
+    \item Em cada iteração deste último ciclo, cada \textit{chunk} é guardado tantas vezes quanto
+    o \textit{replication degree} previamente estabelecido. Para isso executa-se um novo ciclo
+    que a cada iteração gera uma chave a partir da concatenação do número de 
+    \textit{chunks} e o \textit{replication degree} atual. A partir desta chave e da 
+    chamada à função \textit{findSuccessor}, descobre-se o nó onde se deve guardar esse 
+    \textit{chunk}.
+
+    \item De seguida, cria-se uma \textit{thread ChunkSenderThread} responsável pelo envio desta chave e
+    da informação ao sucessor anteriormente descoberto.
+
+    \item O nó a receber esta informação encontra-se já a executar uma outra \textit{thread}
+    de tratamento de pedidos entre nós. Desta forma, ao receber o pedido de BACKUP do 
+    \textit{chunk} atual, cria uma última \textit{thread ChunkReceiver Thread} que guardada
+    a informação recebida.
+
+    \item Este processo é executado para todos os \textit{chunk}, e em cada um destes é relizado
+    tantas vezes quanto o \textit{replication degree} estabelecido.
+\end{enumerate}
+    
+\pagebreak
+
+\subsection{Restore}
+
+\begin{lstlisting}
+    for (int i = 0; i < numChunks; i++) {
+     String key = fileName + "-" + i + "-0";
+     BigInteger chunkID = Utils.getSHA1(key);
+     keys.add(chunkID.toString());
+     successor = this.findSuccessor(this.id, chunkID);
+
+     if (successor.id.equals(this.id)) {
+       storage.addRestoredChunk(chunkID.toString(), fileName, storage.readChunk(chunkID));
+     } else {
+       executor.execute(new ChunkRequestThread(this, successor, chunkID, fileName));
+       executor.schedule(new CheckChunkReceiveThread(this, successor, key, keys, fileName, Integer.parseInt(args[1])),
+           5, TimeUnit.SECONDS);
+     }
+   }
+\end{lstlisting}
+
+\begin{enumerate}
+    \item Inicialmente é executado um comando no terminal contendo: IP e a porta do nó com o qual 
+    se vai comunicar; protocolo; nome do ficheiro ao qual se pretende fazer restore; Assim como 
+    no pedido anterior, este pedido é processado pela TestApp sendo estabelecida uma 
+    comunicação com o nó identificado pelo IP e porta inseridos.
+
+    \item Esta, envia o protocolo e o nome do ficheiro ao nó com o qual está a comunicar e fica 
+    à espera de receber as chunks para mais tarde restaurar o ficheiro.
+
+    \item Este nó, que inicialmente já se encontra à escuta de pedidos na \textit{thread 
+    ClientRequestListenerThread} ao fazer a leitura do protocolo, faz o tratamento desse 
+    pedido executando uma chamada à função respetiva (neste caso a função restore).
+
+    \item Nesta função o nó lê o nome do ficheiro a que se pretende fazer restore e guarda-o 
+    numa chave encriptada (gerada a partir do nome do ficheiro). A partir da chave e da chamada 
+    à função \textit{findSuccessor} descobre-se um dos nós que fez backup desse ficheiro. 
+    A partir deste nó descobre-se o número de chunks desse ficheiro. 
+
+    \item De seguida é executado um ciclo que percorre o número total de chunks. Para cada 
+    \textit{chunk} é criada uma chave encriptada (gerada a partir do número do \textit{chunk}
+     , do nome do ficheiro e do \textit{replication degree}). 
+     
+    \item Com a utilização desta chave e da chamada à função \textit{findSuccessor}, descobre-se 
+    o nó onde se deve ir buscar o \textit{chunk}. Se for o próprio, invoca-se uma função que lê 
+    o \textit{chunk} do disco e o guarda em memória temporária. Caso contrário, abre-se uma 
+    ligação com o sucessor e pede-se que ele envie o \textit{chunk}, guardando-0 também em memória
+    temporária.
+
+    \item Na eventualidade de uma possível falha do nó em questão, é pedido o mesmo \textit{chunk}
+    com um novo \textit{replication degree} recorrendo para isso à \textit{thread CheckChunkReceiveThread}.
+
+    \item Este processo é repetido para todos os \textit{chunks} do ficheiro. O nó que recebe os
+    \textit{chunks}, após o envio de todos os pedidos, bloqueia a execução da função restore até
+    receber os \textit{chunks} todos.
+
+    \item No final é enviado para a TestApp o número total de \textit{chunks} e o conteúdo de
+    cada \textit{chunk}. antes de se enviar cada \textit{chunk} é enviado o seu tamanho. 
+    Esta lê toda a informação dos \textit{chunks} e restaura o ficheiro.
+\end{enumerate}
+ 
+
+\subsection{Delete}
+
+\begin{lstlisting}
+    for (int i = 0; i < chunks; i++) {
+     for (int j = 0; j < repDegree; j++) {
+       String key = fileName + "-" + i + "-" + j;
+       BigInteger chunkID = Utils.getSHA1(key);
+       ExternalNode chunkSuccessor = this.findSuccessor(this.id, chunkID);
+       if (chunkSuccessor.id.equals(this.id)) {
+         deleteChunk(this.id, chunkID);
+       } else {
+         chunkSuccessor.deleteChunk(this.id, chunkID);
+       }
+     }
+   }
+\end{lstlisting}
+
+\begin{enumerate}
+    \item Em primeiro lugar, é executado um comando no terminal contendo: IP e a porta do nó com 
+    o qual se vai comunicar; protocolo; nome do ficheiro. Tal como anteriormente, este pedido é 
+    processado mais uma vez pela TestApp, sendo estabelecida uma comunicação com o nó 
+    identificado pelo IP e porta inseridos.
+
+    \item Esta, envia o protocolo e o nome do ficheiro ao nó com o qual está a comunicar e 
+    termina a sua execução.
+
+    \item Este nó, que inicialmente já se encontra à escuta de pedidos através da
+    \textit{thread ClientRequestListenerThread} ao fazer a leitura do protocolo, faz o 
+    tratamento desse pedido executando uma chamada à função respetiva (neste caso a função delete).
+
+    \item Nesta função o nó lê o nome do ficheiro e guarda-o numa chave encriptada 
+    (gerada a partir do nome do ficheiro).A partir da chave e da chamada à função 
+    \textit{findSuccessor} descobre-se um dos nós que fez backup do ficheiro.
+
+    \item De seguida é executado um ciclo em que, através da função \textit{findSucessor} e de
+    uma chave encriptada( gerada através do nome do ficheiro, do número do \textit{chunk} e do
+    \textit{replication degree}) descobre os nós que executaram backup desse \textit{chunk} e 
+    assim eliminam-se os \textit{chunks} e chaves desses \textit{chunks}. 
+    
+    \item Este ciclo repete-se até que todos os \textit{chunks} do ficheiro fornecido sejam 
+    eliminados.
+\end{enumerate}
+
+
+\subsection{Reclaim}
+\begin{lstlisting}
+    for (File file : chunks.listFiles()) {
+        String fileName = file.getName();
+        BigInteger key = new BigInteger(fileName.split("\\.")[0]);
+        long fileSize = file.length();
+   
+        if (spaceToReclaim <= 0)
+          break;
+        deleteChunk(this.id, key);
+        spaceToReclaim -= fileSize;
+      }
+\end{lstlisting}
+
+\begin{enumerate}   
+    
+    \item Tal como em qualquer outro protocolo, é executado um comando no terminal 
+    contendo: IP e a porta do nó com o qual se vai comunicar; protocolo; tamanho máximo;  
+    Assim como nos pedidos anteriores, este pedido é processado pela TestApp sendo estabelecida
+    uma comunicação com o nó identificado pelo IP e porta inseridos.
+
+    \item Esta, envia o protocolo e o espaço máximo ao nó com o qual está a comunicar e termina 
+    a sua execução.
+
+    \item Este nó, que mais uma vez já se encontra à escuta de pedidos dentro da
+    \textit{thread ClientRequestListenerThread}, ao fazer a leitura do protocolo, realiza o 
+    tratamento desse pedido executando uma chamada à função respetiva (neste caso a função 
+    reclaim).
+     
+    \item Nesta função o nó lê o espaço máximo disponível e calcula o \textit{spaceToReclaim}. 
+    Está variável é menor que 0 caso o espaço máximo disponível seja maior que o espaço utilizado
+    pelo nó.
+
+    \item De seguida é executado um ciclo que percorre todas as chunks que o nó guardou. Caso a 
+    variável \textit{spaceToReclaim} seja maior que 0, elimina os chunks até que a variável 
+    tenha uma valor menor ou igual a 0.
+\end{enumerate}
+
+ 
+\pagebreak
 
 \section{Design da Concorrência}
+\paragraph{}
+Na implementação de mecanismos que lidassem com a concorrência de pedidos e acessos a ficheiros 
+recorreu-se a:
+\begin{itemize}
+    \item \textit{thread pools} na comunicação entre nós.
+    \item \textit{Java NIO} para a leitura dos ficheiros.
+\end{itemize}
+
+\begin{lstlisting}
+    ScheduledExecutorService executor;
+...
+executor = Executors.newScheduledThreadPool(100);
+executor.execute(new NodeThread(this));
+executor.scheduleAtFixedRate(new StabilizeThread(this), 15, 15, TimeUnit.SECONDS);
+\end{lstlisting}
+
+\paragraph{}
+O excerto de código acima apresenta um exemplo de implementação das \textit{threads pools} 
+neste projeto. Durante a execução do programa algumas \textit{threads} são imediatamente executadas
+quando são chamadas enquanto que outras (como é o caso deste exemplo) são agendadas para apenas
+realizarem uma execução periódica após um certo intervalo de tempo. 
+
+\begin{lstlisting}
+    FileOutputStream out = null;
+    try {
+      out = new FileOutputStream(fileName);
+    } catch (FileNotFoundException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+    FileChannel fout = out.getChannel();
+    ByteBuffer byteBuffer = ByteBuffer.allocate(chunkSize);     
+\end{lstlisting}
+
+\paragraph{}
+Este último pedaço de código apresenta a utilização de Java NIO na leitura dos ficheiros. A utilização
+deste mecanismo impede que um ficheiro bloqueie quando acedido por múltiplas \textit{threads} 
+simultaneamente.
+
+\pagebreak
 
 \section{JSSE}
 \paragraph{}
     Nesta implementação está também presente a utilização de JSSE. Este é utilizado em qualquer 
-    tipo de comunicação entre os nós de forma a garantir uma troca de mensagens segura entre estes
-    (desde pedidos e respostas de peers a transferências de ficheiros). Desta forma é protege-se 
-    a identificação de cada peer (IP e porta), tornando a comunicação mais segura. Por este motivo, 
-    não é possível indicar um protocolo específico em que se use este mecanismo pois ele está presente 
-    em todos.
+    tipo de comunicação entre os nós de forma a garantir uma troca segura de mensagens (desde 
+    pedidos e respostas de peers a transferências de ficheiros). Desta forma protege-se a 
+    identificação de cada peer (IP e porta), tornando a comunicação mais segura. Por este motivo, 
+    não é possível indicar um protocolo específico em que se use este mecanismo pois ele está 
+    presente em todos.
 
 \paragraph{}
-    Na implementação de JSSE optou-se pela utilização da classe javax.net.ssl.SSLSocket que adiciona
-    uma camada de segurança à comunicação. Esta classe é instanciada sempre que é necessário o envio 
-    de uma nova mensagem entre nós, ou seja:
+    Dos recursos disponibilizados pelo JSSE optou-se pela utilização da classe javax.net.ssl.SSLSocket.
+    Esta classe é instanciada sempre que é necessário o envio de uma nova mensagem entre nós, 
+    ou seja:
     \begin{itemize}
-        \item \textbf{Comunicação entre Peers:} através de mensagens que  
-        \item \textbf{Comunicação entre TestApp e Peers:} através da realização do “handshake” e da 
-        troca de mensagens que indicam o protocolo a realizar.
+        \item \textbf{Comunicação entre Peers:} troca de mensagens que indicam pedidos a realizar
+        entre \textit{peers} (p.e backup de um \textit{chunk}, restore de um \textit{chunk},
+        encontrar um sucessor, entre outros - presentes na função \textit{interpretMessage} da 
+        classe \textit{NodeThread}).
+        \item \textbf{Comunicação entre TestApp e Peers:} realização do \textit{“handshake”} e 
+        troca de mensagens que indicam os protocolos a realizar.
     \end{itemize}
 
 \begin{lstlisting}
@@ -156,14 +556,16 @@ seguinte:
 \paragraph{}
     O excerto de código acima apresenta a implementação deste socket do lado do emissor 
     (aquele que envia a mensagem).  A implementação é relativamente simples e muito semelhante
-    à de um socket desprovido de SSL. Apenas é necessário instanciar uma SSLFactory contendo a
-    “default factory” e criar um SSLSocket com o ip e porta respetivos. De seguida é instanciada
-    a stream de output (DataOutputStream) , encarregue de enviar a mensagem para outro nó. É 
-    também neste momento que se instancia um BufferedReader responsável pela leitura da resposta. 
-    De seguida constrói-se a mensagem a enviar pela stream de output. Na penúltima instrução, 
+    à de um socket desprovido de SSL. Apenas é necessário instanciar uma \textit{SSLFactory} contendo a
+    “default factory” e criar um \textit{SSLSocket} com o ip e porta respetivos. De seguida é instanciada
+    a stream de output (\textit{DataOutputStream}) , encarregue de enviar a mensagem para outro nó. É 
+    também neste momento que se instancia um \textit{BufferedReader} responsável pela leitura da resposta. 
+    Posteriormente constrói-se a mensagem a enviar pela stream de output. Na penúltima instrução, 
     bloqueia-se a thread atual, que fica assim à espera de uma resposta por parte do recetor. 
-    Uma vez recebida esta resposta é fechado o socket.
+    Uma vez recebida esta resposta é fechado o socket. É importante referir que isto é apenas
+    um exemplo de uma aplicação de um \textit{SSLSocket}.
 
+\pagebreak
 
 \begin{lstlisting}
 SSLServerSocketFactory ssf = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
@@ -185,15 +587,14 @@ while (true) {
 
 \paragraph{}
     Já este último pedaço de código apresenta a implementação deste mesmo socket do lado do recetor
-    (aquele que recebe a mensagem). Aqui é instanciada uma SSLServerFactory onde vai estar presente 
-    um SSLServerSocket.  Este último, a cada pedido que recebe, cria uma nova conexão através de um 
-    SSLSocket que vai estar responsável por esse pedido. Por último é feita uma chamada à função 
-    interpretMessage onde, de acordo com o pedido executado, realiza as operações necessárias e envia
-    uma resposta ao emissor através de uma DataOutputStream.
+    (aquele que recebe a mensagem). Aqui é instanciada uma \textit{SSLServerFactory} onde vai estar presente 
+    um \textit{SSLServerSocket}.  Este último, a cada pedido que recebe, cria uma nova conexão através de um 
+    \textit{SSLSocket} que vai estar responsável por esse pedido. Por último é feita uma chamada à função 
+    \textit{interpretMessage} onde, de acordo com o pedido executado, realiza as operações necessárias e envia
+    uma resposta ao emissor através de uma \textit{DataOutputStream}. Mais uma vez isto é apenas uma
+    aplicação de \textit{SSLSocket} do lado do recetor.
 
-\paragraph{}
-    Em relação às funcionalidades do JSSE que foram utilizadas, 
-
+\pagebreak
 
 \section{Escalabilidade}
 \paragraph{}
@@ -201,21 +602,259 @@ while (true) {
     um protocolo escalável para pesquisas num sistema peer-to-peer dinâmico (com 
     entradas e saídas frequentes de nós e com número altamente variável de nós).
     Este fornece suporte apenas para uma operação: dada uma chave, mapeia essa 
-    chave num nó.  Esse nó pode ser responsável por armazenar um valor associado
+    chave num nó. Esse nó pode ser responsável por armazenar um valor associado
     à chave. 
 
 \paragraph{}
-A utilização do Chord como protocolo torna o sistema escalável pois o custo de
-uma pesquisa cresce logaritmicamente com o aumento do número de nós (log(N) em
-que N é o número de nós). Como tal, até mesmo sistemas muito grandes são 
-alcançáveis.
+    A utilização do Chord como protocolo torna o sistema escalável pois o custo de
+    uma pesquisa cresce logaritmicamente com o aumento do número de nós (log(N) em
+    que N é o número de nós na rede). Como tal, até mesmo sistemas muito grandes são 
+    alcançáveis.
 
 \subsection{Implementação do Chord}
+\paragraph{}
+    Esta secção centra-se apenas na implementação dos conceitos principais do protocolo Chord. 
+    O seu objetivo é esclarecer um pouco estes conceitos e falar da abordagem utilizada na
+    implementação dos mesmos.
 
+    \subsubsection{Chaves}
+    \paragraph{}
+    No protocolo Chord toda a informação guardada é encriptada. Para isso é utilizado o algoritmo
+    de encriptação \textit{SHA-1}. Este algoritmo gera chaves de 160 bits. Desta forma, 
+    este é o número máximo de entradas presente na \textit{finger table} de cada nó, pois 
+    representa o valor mínimo de nós necessário para conseguir chegar a qualquer outro nó de
+    uma rede de N nós com um custo de log(N). 
+    \paragraph{}
+    Existem 2 tipos de chaves: file-info e chunk. 
+    \begin{itemize}
+        \item \textbf{File-info:} chave contendo informação acerca do nome do ficheiro, o número
+        de \textit{chunks} que esse mesmo ficheiro contém e o \textit{replciation degree} deste.
+        \item \textbf{Chunk:} chave contendo informação sobre o nome do ficheiro, o número do
+        \textit{chunk} atual e o valor do \textit{replication degree} atual.
+    \end{itemize}
+
+    \paragraph{}
+    Os identificadores dos nós também são encriptados, estes contém os valores de IP e porta do
+    nó respetivo.
+
+    \subsubsection{Chord Ring}
+    \paragraph{}
+    Dentro do Chord, para que um nó consiga chegar a todos os outros nós e de forma a que estes
+    cheguem a ele, é necessário guardar, para cada nó, o seu antecessor, o sucessor e uma 
+    \textit{finger table} (que será abordada na secção seguinte). O conjunto de todos os nós
+    de um sistem organizado desta forma é comumente designado por \textit{ring}. A implementação 
+    desta caraterística no sistema desenvolvido foi realizada através da criação de 3 atributos 
+    na classe \textit{Node}, sendo estes:
+    \begin{itemize}
+        \item \textbf{predecessor:} Nó que antecede o nó atual.
+        \item \textbf{successor:} Nó que sucede o nó atual.
+        \item \textbf{fingerTable:} Nós que estão ligados ao nó atual.
+    \end{itemize}
+
+    \subsubsection{Finger Table}
+    \paragraph{}
+    Para evitar a pesquisa linear, o Chord implementa um método de pesquisa mais rápido, exigindo
+    que cada nó mantenha uma tabela contendo até m entradas, lembrando que m é o número de bits na 
+    chave encriptada por \textit{SHA-1}. A primeira entrada da \textit{finger table} é, na verdade,
+    o sucessor imediato do nó. Sempre que um nó pretende pesquisar uma chave, apenas necessita de
+    consultar o sucessor ou predecessor mais próximo na sua \textit{finger table}, até que um nó 
+    descubra que a chave está armazenada no seu sucessor imediato.
+
+    \paragraph{}
+    Com essa \textit{finger table}, o número de nós que devem ser contactados para localizar 
+    um sucessor na rede de N nós é O(log N).
+
+    \paragraph{}
+    Na implementação desta \textit{finger table} apenas se criou um atributo na classe \textit{Node}
+    que consiste num array de \textit{External Node}. Este atributo está constantemente a ser
+    alterado pela \textit{thread StabilizeThread}, que periodicamente modifica esta estrutura de dados
+    de forma a ficar o mais atual possível.
+
+    \subsubsection{Find Successor}
+    \paragraph{}
+    Esta é a operação central deste protocolo. A sua função é, dada uma chave, retornar o nó onde
+    esta chave deve ser guardada. Para isso implementou-se a seguinte função:
+    \begin{lstlisting}
+        public ExternalNode findSuccessor(BigInteger requestId, BigInteger id) {
+            if (id.equals(this.id))
+              return this;
+        
+            if (idBetween(id, this.id, this.successor.id))
+              return this.successor;
+        
+            ExternalNode n0 = closestPrecedingNode(id);
+        
+            if (n0.id.equals(this.id))
+              return this;
+        
+            return n0.findSuccessor(this.id, id);
+          }
+        
+    \end{lstlisting}
+
+    \paragraph{}
+    Esta função está presente na classe \textit{Node} e consiste num \textit{override} à função
+    da classe mãe \textit{External Node}. A sua finalidade é retornar o nó onde deverá ser guardada
+    a chave \textit{id} (segundo parâmetro da função acima apresentada). Caso essa chave seja
+    igual ao nó atual, então é neste que deve ser guardada. Senão, caso esta se encontre entre
+    o nó atual e o seu sucessor, deverá ser guardada neste mesmo sucessor. Caso nenhuma destas condições
+    seja cumprida, recorrendo à \textit{finger table} é executada uma chamada a esta mesma função
+    no nó que se encontrar mais próximo da chave (\textit{id}) e que a antecede. Isto vai gerar um 
+    pedido que vai ser enviado a esse nó (através da função \textit{findSuccessor} do \textit{ExternalNode}).
+    Este último, ao receber tal pedido, volta o pedaço de código acima apresentado. Este processo repete-se
+    até que seja encontrado o sucessor da chave em questão, ou seja, o \textit{id}.
+
+    \pagebreak
+
+    \subsubsection{Estabilização}
+    \paragraph{}
+    Para garantir pesquisas corretas, todos os sucessores devem estar atualizados. Portanto, um 
+    protocolo de estabilização é executado periodicamente em segundo plano, o que atualiza 
+    as \textit{finger tables} e sucessores.
+
+    \paragraph{}
+    O protocolo de estabilização funciona da seguinte maneira:
+    \begin{itemize}
+        \item \textbf{stabilize():} N pergunta ao seu sucessor pelo predecessor P e decide se P deve 
+        ser o sucessor de N ou não (isto acontece caso P tenha entrado recentemente no sistema).
+        \begin{lstlisting}
+            public void stabilize() {
+                ExternalNode x = this.successor.getPredecessor(this.id);
+
+                if (x != null && !this.id.equals(x.id)
+                    && (this.id.equals(this.successor.id) || idBetween(x.id, this.id, successor.id))) {
+                this.successor = x;
+                fingerTable[0] = x;
+                }
+
+                this.successor.notify(this.id, this);
+            }
+        \end{lstlisting}
+
+        \item \textbf{fixFingers():} Realizar um pequeno \textit{update} à \textit{finger table}.
+        Visto que podem haver entradas de novos nós, e saídas de outros, convém ter uma versão o
+        mais atualizada possível da \textit{finger table}.
+        
+        \begin{lstlisting}
+            private BigInteger calculateFinger(int i) {
+                return ((this.id.add(new BigInteger("2").pow(i))).mod(new BigInteger("2").pow(fingerTable.length)));
+            }
+
+            public void fixFingers() {
+                for (int i = 1; i < fingerTable.length; i++) {
+                BigInteger fingerID = calculateFinger(i);
+                fingerTable[i] = findSuccessor(this.id, fingerID);
+                }
+            }
+        \end{lstlisting}
+
+        \item \textbf{checkPredecessor():} Notifica o sucessor de N da sua existência para que 
+        este possa alterar o seu antecessor para N. 
+        \begin{lstlisting}
+            public void checkPredecessor() {
+                if (this.predecessor != null && this.predecessor.failed(this.id))
+                  this.predecessor = null;
+            }
+        \end{lstlisting}
+
+    \end{itemize}        
+
+
+\pagebreak
 
 \section{Tolerância a Falhas}
 
 \paragraph{}
+    Como forma de prevenir que saídas ou encerramentos inesperados de alguns nós do 
+    sistema causem a perda da informação contida nesse nó (chaves ou chunks), implementou-se
+    um protocolo de tolerância a falhas. Esse protocolo tem por base a utilização
+    de \textit{replication degree}, semelhante ao já implementado no primeiro projeto desta
+    Unidade Curricular.
 
+\subsection{Implementação da Tolerância a Falhas}
+    \paragraph{}
+    De forma a tornar esta explicação mais clara será dado como exemplo a implementação e
+    importância do \textit{replication degree} nos dois protocolos mais relevantes: \textbf{BACKUP} 
+    e \textbf{RESTORE}. Os protocolos DELETE e RECLAIM não são aqui referidos pois a existência 
+    ou não de um mecanismo de tolerância a falhas não afeta estes protocolos.
+    \begin{itemize}
+        \item \textbf{BACKUP:} Neste protocolo, caso não existisse \textit{replication degree}, 
+        ao realizar-se um \textit{backup} de um \textit{chunk} apenas seria gerada uma chave com o nome 
+        do ficheiro e número do \textit{chunk} atual. Esta chave, após encontrado o seu sucessor,
+        seria guardada no respetivo nó. O problema desta implementação baseia-se no facto de que,
+        caso este último nó inesperadamente sofra uma falha (p.e. abandonar o sistema), a informação
+        desse \textit{chunk} perde-se por completo, comprometendo assim o bom funcionamento de todo o sistema.
+        
+        \begin{lstlisting}
+            for (int j = 0; j < Integer.parseInt(header[3]); j++) {
+                String key = header[1] + "-" + header[2] + "-" + j;
+                BigInteger encrypted = Utils.getSHA1(key);
+
+                ExternalNode successor = this.findSuccessor(this.id, encrypted);
+
+                if (successor.id.equals(this.id)) {
+                storeChunk(encrypted, key, content);
+                } else {
+                executor.execute(new ChunkSenderThread(this, successor, encrypted, key, content, false));
+                }
+             }
+        \end{lstlisting}
+        
+        \paragraph{}
+            Com a introdução deste \textit{replication degree} a cada \textit{chunk} são geradas 
+            várias chaves (tantas quanto o valor do \textit{replication degree} - header[3] no 
+            código acima) utilizando o nome  do ficheiro, o número do \textit{chunk} atual e o 
+            valor do \textit{replication degree} atual.
+            Apesar de, num determinado \textit{chunk}, apenas variar o \textit{replication degree},
+            esta mudança já é o suficiente para que sejam geradas chaves distintas para 
+            \textit{replication degrees} distintos. Desta forma, cada cópia desse \textit{chunk} 
+            será aleatoriamente espalhada pelo sistema, diminuindo a probabilidade de que, ao 
+            falhar um nó, haja perda imediata de um \textit{chunk}.
+        
+            \pagebreak
+
+            \item \textbf{RESTORE:} Este protocolo está encarregue de pesquisar o sistema por 
+            \textit{chunks} de um ficheiro para restaurar no seu nó. Caso não se tivesse em conta
+            esta tolerância a falhas, no momento de BACKUP de um ficheiro cada \textit{chunk} seria 
+            apenas guardado uma única vez. Desta forma, no momento do pedido RESTORE desse ficheiro,
+            caso algum nó, por motivo de falha, não se encontrasse ligado ao sistema, tornar-se-ia 
+            impossível restaurar o ficheiro em questão.
+        
+        \begin{lstlisting}
+            for (int i = 0; i < numChunks; i++) {
+                String key = fileName + "-" + i + "-0";
+                BigInteger chunkID = Utils.getSHA1(key);
+                keys.add(chunkID.toString());
+                successor = this.findSuccessor(this.id, chunkID);
+
+                if (successor.id.equals(this.id)) {
+                    storage.addRestoredChunk(chunkID.toString(), fileName, storage.readChunk(chunkID));
+                } else {
+                    executor.execute(new ChunkRequestThread(this, successor, chunkID, fileName));
+                    executor.schedule(new CheckChunkReceiveThread(this, successor, key, keys, fileName, Integer.parseInt(args[1])),
+                        5, TimeUnit.SECONDS);
+                }
+            }
+        \end{lstlisting}
+        
+        \paragraph{}
+            Com a introdução do \textit{replication degree}, é gerada uma chave contendo, tal como 
+            no protocolo BACKUP, o nome  do ficheiro, o número do \textit{chunk} atual e o valor 
+            do \textit{replication degree} atual. Com esta chave e recorrendo à função
+            \textit{findSuccessor} descobre-se o nó contendo este chunk. Caso este nó não seja 
+            ele próprio, é criada uma \textit{thread} responsável pelo envio do pedido RESTORE 
+            ao nó correspondente. Para além disso, é criada ainda uma outra \textit{thread} 
+            responsável por verificar se o \textit{chunk} pedido já foi recebido ou não. Caso 
+            não tenha sido recebido (por falha do nó ao qual se pediu o \textit{chunk}), é pedido
+            o mesmo \textit{chunk} mas com o \textit{replication degree} imediatamente acima do 
+            anterior.
+
+        \paragraph{}
+            Desta forma é possível verificar que, uma falha num nó do sistema já não compromete
+            por completo o bom funcionamento do sistema visto que, com um \textit{replication degree}
+            associado, a probabilidade de um ficheiro ficar incompleto no sistema reduz substancialmente.
+           
+            
+    \end{itemize}
 
 \end{document}
